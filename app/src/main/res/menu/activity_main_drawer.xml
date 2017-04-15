@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group>
+        <item
+            android:id="@+id/nav_session"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Session" />
+        <item
+            android:id="@+id/nav_history"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="History" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Settings" />
+    </group>
+
+    <group>
+        <item
+            android:id="@+id/nav_feedback"
+            android:icon="@drawable/ic_menu_share"
+            android:title="Send feedback" />
+        <item
+            android:id="@+id/nav_signout"
+            android:icon="@drawable/ic_menu_send"
+            android:title="Sign out" />
+    </group>
+
+</menu>

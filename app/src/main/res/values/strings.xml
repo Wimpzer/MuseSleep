@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">MuseSleep</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="time_buffer_headline">Select the buffer in minutes:</string>
+    <string name="alarm_sound_headline">Select the sound behavior of the alarm:</string>
+
+    <string-array name="time_buffer_array">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+        <item>30</item>
+        <item>45</item>
+        <item>60</item>
+    </string-array>
+    <string-array name="alarm_sound_array">
+        <item>Quiet</item>
+        <item>Increasing</item>
+        <item>Default</item>
+    </string-array>
+</resources>
