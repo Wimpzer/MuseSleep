@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
 import com.choosemuse.libmuse.Muse;
+import com.choosemuse.libmuse.MuseListener;
 import com.choosemuse.libmuse.MuseManagerAndroid;
 
 import java.util.List;
@@ -32,46 +33,51 @@ public class TurnOnHeadbandActivity extends AppCompatActivity {
         // library.
         manager = MuseManagerAndroid.getInstance();
         manager.setContext(this);
+        manager.setMuseListener(new MuseListener() {
+            @Override
+            public void museListChanged() {
+                List<Muse> pairedMuses = manager.getMuses();
+                if (pairedMuses.size() >= 1) {
+                    Fragment connectedFragment = new TurnOnHeadbandConnectedFragment();
+
+                    // Fetch the names and MacAddresses of connected muses and store them in string array
+                    int musesAmount = pairedMuses.size();
+                    String[] pairedMusesNames = new String[musesAmount];
+                    for (int i = 0; i < musesAmount; i++) {
+                        pairedMusesNames[i] = String.valueOf(pairedMuses.get(i).getName().concat(pairedMuses.get(i).getMacAddress()));
+                    }
+
+                    Bundle args = new Bundle();
+                    args.putStringArray("pairedMuses", pairedMusesNames);
+                    connectedFragment.setArguments(args);
+
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.turnOnFragment, connectedFragment);
+                    fragmentTransaction.commit();
+                }
+            }
+        });
 
         manager.startListening();
-
-        handler.post(tickUi);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         manager.stopListening();
-        handler.removeCallbacks(tickUi);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         manager.startListening();
-        handler.post(tickUi);
     }
 
-    private final Runnable tickUi = new Runnable() {
-        @Override
-        public void run() {
-            List<Muse> pairedMuses = manager.getMuses();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        manager.stopListening();
+    }
 
-            if (pairedMuses.size() < 1) {
-
-            } else {
-                Fragment connectedFragment = new TurnOnHeadbandConnectedFragment();
-                PairedMuses pairedMusesObject = new PairedMuses(pairedMuses);
-                Bundle args = new Bundle();
-                args.putSerializable("pairedMuses", pairedMusesObject);
-                connectedFragment.setArguments(args);
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                fragmentTransaction.replace(R.id.turnOnFragment, connectedFragment);
-                fragmentTransaction.commit();
-            }
-
-            handler.postDelayed(tickUi, 1000 / 60);
-        }
-    };
 }

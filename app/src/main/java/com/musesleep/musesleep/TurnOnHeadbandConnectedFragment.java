@@ -30,17 +30,10 @@ public class TurnOnHeadbandConnectedFragment extends Fragment implements OnItemC
         View rootView = inflater.inflate(R.layout.turn_on_headband_connected_fragment, container, false);
 
         Bundle bundle = getArguments();
-        PairedMuses pairedMuses = (PairedMuses) bundle.getSerializable("pairedMuses");
-
-        // Fetch the names and MacAddresses of connected muses and store them in string array
-        int musesAmount = pairedMuses.getPairedMuses().size();
-        String[] musesMacAddresses = new String[musesAmount];
-        for (int i = 0; i < musesAmount; i++) {
-            musesMacAddresses[i] = String.valueOf(pairedMuses.getPairedMuses().get(i).getName().concat(pairedMuses.getPairedMuses().get(i).getMacAddress()));
-        }
+        String[] pairedMusesNames = bundle.getStringArray("pairedMuses");
 
         museListView = (ListView) rootView.findViewById(R.id.museListView);
-        ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(getActivity(), R.layout.listview_item, musesMacAddresses);
+        ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(getActivity(), R.layout.listview_item, pairedMusesNames);
         museListView.setAdapter(listViewAdapter);
         museListView.setOnItemClickListener(this);
 
