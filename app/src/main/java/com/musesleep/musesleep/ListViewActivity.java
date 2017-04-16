@@ -28,7 +28,7 @@ public class ListViewActivity extends AppCompatActivity implements OnItemClickLi
         int arrayIdentifier = getIntent().getExtras().getInt("array");
         String[] array = getResources().getStringArray(arrayIdentifier);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, array);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.listview_item, array);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
     }

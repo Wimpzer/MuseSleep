@@ -4,14 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.musesleep.musesleep.ListViewActivity">
+    tools:context="com.musesleep.musesleep.ListViewActivity"
+    android:background="@drawable/nightsky">
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:textColor="@color/textColor"/>
 
     <ListView
         android:id="@+id/listView"
