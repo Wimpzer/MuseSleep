@@ -27,7 +27,8 @@
             android:name=".TurnOnHeadbandActivity"
             android:label="@string/app_name" />
         <activity android:name=".ListViewActivity" />
-        <activity android:name=".SessionActivity"></activity>
+        <activity android:name=".SessionActivity" />
+        <activity android:name=".SignalQualityActivity"></activity>
     </application>
 
 </manifest>
