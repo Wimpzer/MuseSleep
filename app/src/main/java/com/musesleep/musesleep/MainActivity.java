@@ -104,8 +104,8 @@ public class MainActivity extends AppCompatActivity
 //            Intent historyIntent = new Intent(this, HistoryActivity.class);
 //            startActivity(historyIntent);
         } else if (id == R.id.nav_settings) {
-            Intent settingsIntent = new Intent(this, SettingsActivity.class);
-            startActivity(settingsIntent);
+//            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+//            startActivity(settingsIntent);
         } else if (id == R.id.nav_feedback) {
 //            Intent feedbackIntent = new Intent(this, FeedbackActivity.class);
 //            startActivity(feedbackIntent);
