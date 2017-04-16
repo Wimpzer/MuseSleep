@@ -2,6 +2,7 @@ package com.musesleep.musesleep;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int TIME_BUFFER_RESULT_CODE = 1;
     private static final int ALARM_SOUND_RESULT_CODE = 2;
+    private static Context appContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,8 @@ public class MainActivity extends AppCompatActivity
             introDialog.show();
         }
 
+        // Saving the context for later use in MuseManager Singleton
+        appContext = this;
 
         // Initiating clickable views and sets OnClickListener
         Button startSessionButton = (Button) findViewById(R.id.startSessionButton);
@@ -79,6 +83,10 @@ public class MainActivity extends AppCompatActivity
 
         ImageView alarmSoundImageView = (ImageView) findViewById(R.id.alarmSoundImageView);
         alarmSoundImageView.setOnClickListener(this);
+    }
+
+    public static Context getAppContext() {
+        return appContext;
     }
 
     @Override
