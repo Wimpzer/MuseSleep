@@ -58,6 +58,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private String firebaseSessionId;
 
     private CountUpTimer countUpTimer;
+    private Button pauseButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +108,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         // Sets OnClickListener on the buttons
         Button stopButton = (Button) findViewById(R.id.sessionStopButton);
         stopButton.setOnClickListener(this);
-        Button pauseButton = (Button) findViewById(R.id.sessionPauseButton);
+        pauseButton = (Button) findViewById(R.id.sessionPauseButton);
         pauseButton.setOnClickListener(this);
 
         handler.post(tickUi);
@@ -315,7 +316,17 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.sessionPauseButton) {
-
+            if(pauseButton.getText().toString().toLowerCase().equals("pause")) {
+                pauseButton.setText("Resume");
+                countUpTimer.pause();
+                manager.stopListening();
+                handler.removeCallbacks(tickUi);
+            }else{
+                pauseButton.setText("Pause");
+                countUpTimer.resume();
+                manager.startListening();
+                handler.post(tickUi);
+            }
         }else if(v.getId() == R.id.sessionStopButton) {
             countUpTimer.stop();
             manager.stopListening();

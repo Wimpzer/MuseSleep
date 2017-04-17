@@ -8,9 +8,12 @@ public abstract class CountUpTimer {
 
     private final long interval;
     private long base;
+    private long pausedElapsedTime;
+    private boolean haveResumed;
 
     public CountUpTimer(long interval) {
         this.interval = interval;
+        haveResumed = false;
     }
 
     public void start() {
@@ -20,12 +23,24 @@ public abstract class CountUpTimer {
 
     public void stop() {
         handler.removeMessages(MSG);
+        haveResumed = false;
     }
 
     public void reset() {
         synchronized (this) {
             base = SystemClock.elapsedRealtime();
+            haveResumed = false;
         }
+    }
+
+    public void pause() {
+        pausedElapsedTime = SystemClock.elapsedRealtime() - base;
+        stop();
+    }
+
+    public void resume() {
+        haveResumed = true;
+        start();
     }
 
     abstract public void onTick(long elapsedTime);
@@ -37,6 +52,8 @@ public abstract class CountUpTimer {
         public void handleMessage(Message msg) {
             synchronized (CountUpTimer.this) {
                 long elapsedTime = SystemClock.elapsedRealtime() - base;
+                if(haveResumed)
+                    elapsedTime += pausedElapsedTime;
                 onTick(elapsedTime);
                 sendMessageDelayed(obtainMessage(MSG), interval);
             }
