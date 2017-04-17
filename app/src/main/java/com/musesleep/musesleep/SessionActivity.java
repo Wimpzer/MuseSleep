@@ -5,6 +5,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.choosemuse.libmuse.ConnectionState;
 import com.choosemuse.libmuse.Eeg;
@@ -24,10 +28,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SessionActivity extends AppCompatActivity {
+public class SessionActivity extends AppCompatActivity implements OnClickListener {
     private final String TAG = "MUSESLEEP";
+    private final String FIREBASE_WAVE_TAG = "EEGs";
 
     private MuseManagerAndroid manager = null;
     private Muse muse = null;
@@ -48,9 +55,9 @@ public class SessionActivity extends AppCompatActivity {
     private boolean gammaStale = false;
 
     private DatabaseReference myFirebaseRef;
-    private String DATABASE_URL = "blazing-heat-9566";
-    private String sessionId;
+    private String firebaseSessionId;
 
+    private CountUpTimer countUpTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,12 +75,13 @@ public class SessionActivity extends AppCompatActivity {
         dataListener = new DataListener(weakActivity);
         manager.startListening();
 
-        myFirebaseRef = FirebaseDatabase.getInstance().getReference(DATABASE_URL);
-        sessionId = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        myFirebaseRef.removeValue();
+        // Sets the Firebase reference to the current sessionId
+        firebaseSessionId = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        myFirebaseRef = FirebaseDatabase.getInstance().getReference(firebaseSessionId);
+        FirebaseDatabase.getInstance().getReference().removeValue(); // Deletes the entire Firebase database
 
 //        muse = manager.getMuses().get(musePosition);
-        muse = MuseManager.getInstance().getMuseList().get(musePosition); //TODO: Check this hax
+        muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
         muse.unregisterAllListeners();
         muse.registerConnectionListener(connectionListener);
         muse.registerDataListener(dataListener, MuseDataPacketType.EEG);
@@ -84,10 +92,49 @@ public class SessionActivity extends AppCompatActivity {
         muse.registerDataListener(dataListener, MuseDataPacketType.BATTERY);
         muse.runAsynchronously();
 
+        final TextView sessionTimerTextView = (TextView) findViewById(R.id.sessionTimerTextView);
+        countUpTimer = new CountUpTimer(1000) {
+            @Override
+            public void onTick(long elapsedTime) {
+                int totalTime = (int) (elapsedTime/1000);
+                String minutes = String.format("%02d", totalTime/60);
+                String seconds = String.format("%02d", totalTime - (Integer.parseInt(minutes)*60));
+                sessionTimerTextView.setText(minutes + ":" + seconds);
+            }
+        };
+        countUpTimer.start();
+
+        // Sets OnClickListener on the buttons
+        Button stopButton = (Button) findViewById(R.id.sessionStopButton);
+        stopButton.setOnClickListener(this);
+        Button pauseButton = (Button) findViewById(R.id.sessionPauseButton);
+        pauseButton.setOnClickListener(this);
+
         handler.post(tickUi);
     }
 
-    // helper methods to get different packet values
+    @Override
+    protected void onPause() {
+        super.onPause();
+        manager.stopListening();
+        handler.removeCallbacks(tickUi);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        manager.startListening();
+        handler.post(tickUi);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        manager.stopListening();
+        handler.removeCallbacks(tickUi);
+    }
+
+    // Helper methods to get different packet values
     private void getEegChannelValues(double[] buffer, MuseDataPacket p) {
         buffer[0] = p.getEegChannelValue(Eeg.EEG1);
         buffer[1] = p.getEegChannelValue(Eeg.EEG2);
@@ -99,18 +146,13 @@ public class SessionActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler();
 
-    // We update the UI from this Runnable instead of in packet handlers
-    // because packets come in at high frequency -- 220Hz or more for raw EEG
-    // -- and it only makes sense to update the UI at about 60fps. The update
-    // functions do some string allocation, so this reduces our memory
-    // footprint and makes GC pauses less frequent/noticeable.
     private final Runnable tickUi = new Runnable() {
         @Override
         public void run() {
             if (eegStale) {
                 updateEeg();
             }
-            handler.postDelayed(tickUi, 1000);
+            handler.postDelayed(tickUi, 1000/60);
         }
     };
 
@@ -217,11 +259,13 @@ public class SessionActivity extends AppCompatActivity {
         double gammaWave100 = gammaWave * 100;
         Log.d(TAG, "updateGamma - gammaWave 100: " + gammaWave100);
 
-        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S").format(new Date());
-        myFirebaseRef.child(sessionId).child(currentTime).child("alphaWave").setValue(alphaWave100);
-        myFirebaseRef.child(sessionId).child(currentTime).child("betaWave").setValue(betaWave100);
-        myFirebaseRef.child(sessionId).child(currentTime).child("deltaWave").setValue(deltaWave100);
-        myFirebaseRef.child(sessionId).child(currentTime).child("gammaWave").setValue(gammaWave100);
+        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS").format(new Date());
+        Map<String, Double> waveCollection = new HashMap<>();
+        waveCollection.put("alphaWave", alphaWave100);
+        waveCollection.put("betaWave", betaWave100);
+        waveCollection.put("deltaWave", deltaWave100);
+        waveCollection.put("gammaWave", gammaWave100);
+        myFirebaseRef.child(FIREBASE_WAVE_TAG).child(currentTime).setValue(waveCollection);
     }
 
     private double setAverageAlphaBuffer() {
@@ -266,6 +310,17 @@ public class SessionActivity extends AppCompatActivity {
             return (sum / gammaBuffer.length);
         }
         return sum;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v.getId() == R.id.sessionPauseButton) {
+
+        }else if(v.getId() == R.id.sessionStopButton) {
+            countUpTimer.stop();
+            manager.stopListening();
+            handler.removeCallbacks(tickUi);
+        }
     }
 
     // Listener translators follow.

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "31172245770",
+    "firebase_url": "https://blazing-heat-9566.firebaseio.com",
+    "project_id": "blazing-heat-9566",
+    "storage_bucket": "blazing-heat-9566.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:31172245770:android:cd555420a9282434",
+        "android_client_info": {
+          "package_name": "com.musesleep.musesleep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "31172245770-jus008ruhqocuo7d0af93g6lu91pjkt7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.musesleep.musesleep",
+            "certificate_hash": "9c9e66cdb77a620f2577c00d261960766bf62572"
+          }
+        },
+        {
+          "client_id": "31172245770-uj2978jojfeu3uf40f4jkbvjjq79a2gr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLNhJf0lzG_saJ8_SBv1iIJXFr17WA1Vk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "31172245770-uj2978jojfeu3uf40f4jkbvjjq79a2gr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
