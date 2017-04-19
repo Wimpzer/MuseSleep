@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SessionActivity extends AppCompatActivity implements OnClickListener {
     private final String TAG = "MUSESLEEP";
     private final String FIREBASE_WAVE_TAG = "EEGs";
+    private final String FIREBASE_STARTTIME_TAG = "StartTime";
 
     private MuseManagerAndroid manager = null;
     private Muse muse = null;
@@ -54,6 +55,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private final double[] gammaBuffer = new double[6];
     private boolean gammaStale = false;
 
+    private FirebaseDatabase myFirebaseInstance;
+    private DatabaseReference myFirebaseBaseRef;
     private DatabaseReference myFirebaseRef;
     private String firebaseSessionId;
 
@@ -77,9 +80,16 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         manager.startListening();
 
         // Sets the Firebase reference to the current sessionId
-        firebaseSessionId = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        myFirebaseRef = FirebaseDatabase.getInstance().getReference(firebaseSessionId);
-        FirebaseDatabase.getInstance().getReference().removeValue(); // Deletes the entire Firebase database
+        myFirebaseInstance = FirebaseDatabase.getInstance();
+        myFirebaseBaseRef = myFirebaseInstance.getReference();
+        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
+        firebaseSessionId = myFirebaseBaseRef.push().getKey();
+//        firebaseSessionId = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        myFirebaseRef = myFirebaseInstance.getReference(firebaseSessionId); // .setPersistenceEnalbed(true) hvis den skal virke offline
+
+        // Sets the start time variable for the current session
+        String startTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        myFirebaseRef.child(FIREBASE_STARTTIME_TAG).setValue(startTime);
 
 //        muse = manager.getMuses().get(musePosition);
         muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
@@ -246,18 +256,26 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private void updateEeg() {
         double alphaWave = setAverageAlphaBuffer();
         double alphaWave100 = alphaWave * 100;
+        if(Double.isNaN(alphaWave100))
+            alphaWave100 = 0;
         Log.d(TAG, "updateAlpha - alphaWave 100: " + alphaWave100);
 
         double betaWave = setAverageBetaBuffer();
         double betaWave100 = betaWave * 100;
+        if(Double.isNaN(betaWave100))
+            betaWave100 = 0;
         Log.d(TAG, "updateBeta - Betawave 100: " + betaWave100);
 
         double deltaWave = setAverageDeltaBuffer();
         double deltaWave100 = deltaWave * 100;
+        if(Double.isNaN(deltaWave100))
+            deltaWave100 = 0;
         Log.d(TAG, "updateDelta - deltaWave 100: " + deltaWave100);
 
         double gammaWave = setAverageGammaBuffer();
         double gammaWave100 = gammaWave * 100;
+        if(Double.isNaN(gammaWave100))
+            gammaWave100 = 0;
         Log.d(TAG, "updateGamma - gammaWave 100: " + gammaWave100);
 
         String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS").format(new Date());

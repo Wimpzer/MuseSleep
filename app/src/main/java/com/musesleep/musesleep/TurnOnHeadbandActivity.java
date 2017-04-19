@@ -64,8 +64,8 @@ public class TurnOnHeadbandActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         manager.stopListening();
+        super.onDestroy();
     }
 
 }
