@@ -54,6 +54,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private boolean deltaStale = false;
     private final double[] gammaBuffer = new double[6];
     private boolean gammaStale = false;
+    private final double[] thetaBuffer = new double[6];
+    private boolean thetaStale = false;
 
     private FirebaseDatabase myFirebaseInstance;
     private DatabaseReference myFirebaseBaseRef;
@@ -100,6 +102,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         muse.registerDataListener(dataListener, MuseDataPacketType.BETA_ABSOLUTE);
         muse.registerDataListener(dataListener, MuseDataPacketType.DELTA_ABSOLUTE);
         muse.registerDataListener(dataListener, MuseDataPacketType.GAMMA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.THETA_ABSOLUTE);
         muse.registerDataListener(dataListener, MuseDataPacketType.BATTERY);
         muse.runAsynchronously();
 
@@ -121,28 +124,28 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         pauseButton = (Button) findViewById(R.id.sessionPauseButton);
         pauseButton.setOnClickListener(this);
 
-        handler.post(tickUi);
+//        handler.post(tickUi);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         manager.stopListening();
-        handler.removeCallbacks(tickUi);
+//        handler.removeCallbacks(tickUi);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         manager.startListening();
-        handler.post(tickUi);
+//        handler.post(tickUi);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         manager.stopListening();
-        handler.removeCallbacks(tickUi);
+//        handler.removeCallbacks(tickUi);
     }
 
     // Helper methods to get different packet values
@@ -157,15 +160,15 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
     private final Handler handler = new Handler();
 
-    private final Runnable tickUi = new Runnable() {
-        @Override
-        public void run() {
-            if (eegStale) {
-                updateEeg();
-            }
-            handler.postDelayed(tickUi, 1000/60);
-        }
-    };
+//    private final Runnable tickUi = new Runnable() {
+//        @Override
+//        public void run() {
+//            if (eegStale) {
+//                updateEeg();
+//            }
+//            handler.postDelayed(tickUi, 1000);
+//        }
+//    };
 
     private final AtomicReference<MuseFileWriter> fileWriter = new AtomicReference<>();
     private final AtomicReference<Handler> fileHandler = new AtomicReference<>();
@@ -244,9 +247,15 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 getEegChannelValues(gammaBuffer, p);
                 gammaStale = true;
                 break;
+            case THETA_ABSOLUTE:
+                assert(thetaBuffer.length >= n);
+                getEegChannelValues(thetaBuffer, p);
+                thetaStale = true;
+                break;
             default:
                 break;
         }
+        updateEeg();
     }
 
     public void receiveMuseArtifactPacket(final MuseArtifactPacket p) {
@@ -255,35 +264,37 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
     private void updateEeg() {
         double alphaWave = setAverageAlphaBuffer();
-        double alphaWave100 = alphaWave * 100;
-        if(Double.isNaN(alphaWave100))
-            alphaWave100 = 0;
-        Log.d(TAG, "updateAlpha - alphaWave 100: " + alphaWave100);
+        if(Double.isNaN(alphaWave))
+            alphaWave = 0;
+        Log.d(TAG, "updateAlpha - alphaWave: " + alphaWave);
 
         double betaWave = setAverageBetaBuffer();
-        double betaWave100 = betaWave * 100;
-        if(Double.isNaN(betaWave100))
-            betaWave100 = 0;
-        Log.d(TAG, "updateBeta - Betawave 100: " + betaWave100);
+        if(Double.isNaN(betaWave))
+            betaWave = 0;
+        Log.d(TAG, "updateBeta - betaWave: " + betaWave);
 
         double deltaWave = setAverageDeltaBuffer();
-        double deltaWave100 = deltaWave * 100;
-        if(Double.isNaN(deltaWave100))
-            deltaWave100 = 0;
-        Log.d(TAG, "updateDelta - deltaWave 100: " + deltaWave100);
+        if(Double.isNaN(deltaWave))
+            deltaWave = 0;
+        Log.d(TAG, "updateDelta - deltaWave: " + deltaWave);
 
         double gammaWave = setAverageGammaBuffer();
-        double gammaWave100 = gammaWave * 100;
-        if(Double.isNaN(gammaWave100))
-            gammaWave100 = 0;
-        Log.d(TAG, "updateGamma - gammaWave 100: " + gammaWave100);
+        if(Double.isNaN(gammaWave))
+            gammaWave = 0;
+        Log.d(TAG, "updateGamma - gammaWave: " + gammaWave);
+
+        double thetaWave = setAverageThetaBuffer();
+        if(Double.isNaN(thetaWave))
+            thetaWave = 0;
+        Log.d(TAG, "updateTheta - thetaWave: " + thetaWave);
 
         String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS").format(new Date());
         Map<String, Double> waveCollection = new HashMap<>();
-        waveCollection.put("alphaWave", alphaWave100);
-        waveCollection.put("betaWave", betaWave100);
-        waveCollection.put("deltaWave", deltaWave100);
-        waveCollection.put("gammaWave", gammaWave100);
+        waveCollection.put("alphaWave", alphaWave);
+        waveCollection.put("betaWave", betaWave);
+        waveCollection.put("deltaWave", deltaWave);
+        waveCollection.put("gammaWave", gammaWave);
+        waveCollection.put("thetaWave", thetaWave);
         myFirebaseRef.child(FIREBASE_WAVE_TAG).child(currentTime).setValue(waveCollection);
     }
 
@@ -331,6 +342,17 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         return sum;
     }
 
+    private double setAverageThetaBuffer() {
+        double sum = 0;
+        if(thetaBuffer.length > 0) {
+            for (Double mark : thetaBuffer) {
+                sum += mark;
+            }
+            return (sum / thetaBuffer.length);
+        }
+        return sum;
+    }
+
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.sessionPauseButton) {
@@ -338,17 +360,17 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 pauseButton.setText("Resume");
                 countUpTimer.pause();
                 manager.stopListening();
-                handler.removeCallbacks(tickUi);
+//                handler.removeCallbacks(tickUi);
             }else{
                 pauseButton.setText("Pause");
                 countUpTimer.resume();
                 manager.startListening();
-                handler.post(tickUi);
+//                handler.post(tickUi);
             }
         }else if(v.getId() == R.id.sessionStopButton) {
             countUpTimer.stop();
             manager.stopListening();
-            handler.removeCallbacks(tickUi);
+//            handler.removeCallbacks(tickUi);
         }
     }
 
