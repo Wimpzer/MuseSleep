@@ -84,9 +84,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         // Sets the Firebase reference to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
-        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
+//        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
         firebaseSessionId = myFirebaseBaseRef.push().getKey();
-//        firebaseSessionId = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         myFirebaseRef = myFirebaseInstance.getReference(firebaseSessionId); // .setPersistenceEnalbed(true) hvis den skal virke offline
 
         // Sets the start time variable for the current session
@@ -96,15 +95,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 //        muse = manager.getMuses().get(musePosition);
         muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
         muse.unregisterAllListeners();
-        muse.registerConnectionListener(connectionListener);
-        muse.registerDataListener(dataListener, MuseDataPacketType.EEG);
-        muse.registerDataListener(dataListener, MuseDataPacketType.ALPHA_ABSOLUTE);
-        muse.registerDataListener(dataListener, MuseDataPacketType.BETA_ABSOLUTE);
-        muse.registerDataListener(dataListener, MuseDataPacketType.DELTA_ABSOLUTE);
-        muse.registerDataListener(dataListener, MuseDataPacketType.GAMMA_ABSOLUTE);
-        muse.registerDataListener(dataListener, MuseDataPacketType.THETA_ABSOLUTE);
-        muse.registerDataListener(dataListener, MuseDataPacketType.BATTERY);
-        muse.runAsynchronously();
+        registerMuseDataListeners();
 
         final TextView sessionTimerTextView = (TextView) findViewById(R.id.sessionTimerTextView);
         countUpTimer = new CountUpTimer(1000) {
@@ -123,29 +114,36 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         stopButton.setOnClickListener(this);
         pauseButton = (Button) findViewById(R.id.sessionPauseButton);
         pauseButton.setOnClickListener(this);
+    }
 
-//        handler.post(tickUi);
+    private void registerMuseDataListeners() {
+        muse.registerConnectionListener(connectionListener);
+        muse.registerDataListener(dataListener, MuseDataPacketType.EEG);
+        muse.registerDataListener(dataListener, MuseDataPacketType.ALPHA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.BETA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.DELTA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.GAMMA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.THETA_ABSOLUTE);
+        muse.registerDataListener(dataListener, MuseDataPacketType.BATTERY);
+        muse.runAsynchronously();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         manager.stopListening();
-//        handler.removeCallbacks(tickUi);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         manager.startListening();
-//        handler.post(tickUi);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         manager.stopListening();
-//        handler.removeCallbacks(tickUi);
     }
 
     // Helper methods to get different packet values
@@ -159,16 +157,6 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     }
 
     private final Handler handler = new Handler();
-
-//    private final Runnable tickUi = new Runnable() {
-//        @Override
-//        public void run() {
-//            if (eegStale) {
-//                updateEeg();
-//            }
-//            handler.postDelayed(tickUi, 1000);
-//        }
-//    };
 
     private final AtomicReference<MuseFileWriter> fileWriter = new AtomicReference<>();
     private final AtomicReference<Handler> fileHandler = new AtomicReference<>();
@@ -360,17 +348,17 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 pauseButton.setText("Resume");
                 countUpTimer.pause();
                 manager.stopListening();
-//                handler.removeCallbacks(tickUi);
+                muse.unregisterAllListeners();
             }else{
                 pauseButton.setText("Pause");
                 countUpTimer.resume();
                 manager.startListening();
-//                handler.post(tickUi);
+                registerMuseDataListeners();
             }
         }else if(v.getId() == R.id.sessionStopButton) {
             countUpTimer.stop();
             manager.stopListening();
-//            handler.removeCallbacks(tickUi);
+            muse.unregisterAllListeners();
         }
     }
 
