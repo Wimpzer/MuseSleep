@@ -20,7 +20,6 @@ import com.choosemuse.libmuse.MuseDataListener;
 import com.choosemuse.libmuse.MuseDataPacket;
 import com.choosemuse.libmuse.MuseDataPacketType;
 import com.choosemuse.libmuse.MuseFileWriter;
-import com.choosemuse.libmuse.MuseManagerAndroid;
 import com.choosemuse.libmuse.MuseVersion;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -36,8 +35,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private final String TAG = "MUSESLEEP";
     private final String FIREBASE_WAVE_TAG = "EEGs";
     private final String FIREBASE_TIME_TAG = "Time";
+    private final int TICKTIMER = 1000/2;
 
-    private MuseManagerAndroid manager = null;
     private Muse muse = null;
     private ConnectionListener connectionListener = null;
     private DataListener dataListener = null;
@@ -66,7 +65,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
     private CountUpTimer countUpTimer;
     private Button pauseButton;
-    private SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,13 +75,10 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         Intent intent = getIntent();
         int musePosition = intent.getIntExtra("MusePosition", 0);
 
-        manager = MuseManager.getInstance().getManager();
-
         WeakReference<SessionActivity> weakActivity =
                 new WeakReference<>(this);
         connectionListener = new ConnectionListener(weakActivity);
         dataListener = new DataListener(weakActivity);
-        manager.startListening();
 
         // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
@@ -96,12 +92,10 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
         // Sets the start time variable for the current session
         String startTime = standardDateFormat.format(new Date());
-        myFirebaseTimeRef.child("StartTime").setValue(startTime);
+        myFirebaseTimeRef.child("startTime").setValue(startTime);
 
 //        muse = manager.getMuses().get(musePosition);
         muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
-        muse.unregisterAllListeners();
-        registerMuseDataListeners();
 
         final TextView sessionTimerTextView = (TextView) findViewById(R.id.sessionTimerTextView);
         countUpTimer = new CountUpTimer(1000) {
@@ -122,7 +116,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         pauseButton.setOnClickListener(this);
     }
 
-    private void registerMuseDataListeners() {
+    private void registerMuseListeners() {
         muse.registerConnectionListener(connectionListener);
         muse.registerDataListener(dataListener, MuseDataPacketType.EEG);
         muse.registerDataListener(dataListener, MuseDataPacketType.ALPHA_ABSOLUTE);
@@ -137,23 +131,25 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     @Override
     protected void onPause() {
         super.onPause();
-        manager.stopListening();
         String endTime = standardDateFormat.format(new Date());
-        myFirebaseTimeRef.child("EndTime").setValue(endTime);
+        myFirebaseTimeRef.child("endTime").setValue(endTime);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        manager.startListening();
+        muse.unregisterAllListeners();
+        registerMuseListeners();
+        handler.post(tickUi);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        manager.stopListening();
         String endTime = standardDateFormat.format(new Date());
-        myFirebaseTimeRef.child("EndTime").setValue(endTime);
+        myFirebaseTimeRef.child("endTime").setValue(endTime);
+        muse.unregisterAllListeners();
+        handler.removeCallbacks(tickUi);
     }
 
     // Helper methods to get different packet values
@@ -253,47 +249,92 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
             default:
                 break;
         }
-        updateEeg();
     }
 
     public void receiveMuseArtifactPacket(final MuseArtifactPacket p) {
 
     }
 
+    private final Runnable tickUi = new Runnable() {
+        @Override
+        public void run() {
+            updateEeg();
+            handler.postDelayed(tickUi, TICKTIMER);
+        }
+    };
+
     private void updateEeg() {
         double alphaWave = setAverageAlphaBuffer();
         if(Double.isNaN(alphaWave))
             alphaWave = 0;
         Log.d(TAG, "updateAlpha - alphaWave: " + alphaWave);
+        Map<String, Double> alphaCollection = new HashMap<>();
+        for(int i = 0; i < alphaBuffer.length; i++) {
+            if(Double.isNaN(alphaBuffer[i]))
+                alphaCollection.put("alpha" + i, 0.0);
+            else
+                alphaCollection.put("alpha" + i, alphaBuffer[i]);
+        }
+        alphaCollection.put("alphaAvg", alphaWave);
 
         double betaWave = setAverageBetaBuffer();
         if(Double.isNaN(betaWave))
             betaWave = 0;
         Log.d(TAG, "updateBeta - betaWave: " + betaWave);
+        Map<String, Double> betaCollection = new HashMap<>();
+        for(int i = 0; i < betaBuffer.length; i++) {
+            if(Double.isNaN(betaBuffer[i]))
+                betaCollection.put("beta" + i, 0.0);
+            else
+                betaCollection.put("beta" + i, betaBuffer[i]);
+        }
+        betaCollection.put("betaAvg", betaWave);
 
         double deltaWave = setAverageDeltaBuffer();
         if(Double.isNaN(deltaWave))
             deltaWave = 0;
         Log.d(TAG, "updateDelta - deltaWave: " + deltaWave);
+        Map<String, Double> deltaCollection = new HashMap<>();
+        for(int i = 0; i < deltaBuffer.length; i++) {
+            if(Double.isNaN(deltaBuffer[i]))
+                deltaCollection.put("delta" + i, 0.0);
+            else
+                deltaCollection.put("delta" + i, deltaBuffer[i]);
+        }
+        deltaCollection.put("deltaAvg", deltaWave);
 
         double gammaWave = setAverageGammaBuffer();
         if(Double.isNaN(gammaWave))
             gammaWave = 0;
         Log.d(TAG, "updateGamma - gammaWave: " + gammaWave);
+        Map<String, Double> gammaCollection = new HashMap<>();
+        for(int i = 0; i < gammaBuffer.length; i++) {
+            if(Double.isNaN(gammaBuffer[i]))
+                gammaCollection.put("gamma" + i, 0.0);
+            else
+                gammaCollection.put("gamma" + i, gammaBuffer[i]);
+        }
+        gammaCollection.put("gammaAvg", gammaWave);
 
         double thetaWave = setAverageThetaBuffer();
         if(Double.isNaN(thetaWave))
             thetaWave = 0;
         Log.d(TAG, "updateTheta - thetaWave: " + thetaWave);
+        Map<String, Double> thetaCollection = new HashMap<>();
+        for(int i = 0; i < thetaBuffer.length; i++) {
+            if(Double.isNaN(thetaBuffer[i]))
+                thetaCollection.put("theta" + i, 0.0);
+            else
+                thetaCollection.put("theta" + i, thetaBuffer[i]);
+        }
+        thetaCollection.put("thetaAvg", thetaWave);
 
         String currentTime = standardDateFormat.format(new Date());
-        Map<String, Double> waveCollection = new HashMap<>();
-        waveCollection.put("alphaWave", alphaWave);
-        waveCollection.put("betaWave", betaWave);
-        waveCollection.put("deltaWave", deltaWave);
-        waveCollection.put("gammaWave", gammaWave);
-        waveCollection.put("thetaWave", thetaWave);
-        myFirebaseEEGRef.child(currentTime).setValue(waveCollection);
+        myFirebaseEEGRef.child("alpha").child(currentTime).setValue(alphaCollection);
+        myFirebaseEEGRef.child("beta").child(currentTime).setValue(betaCollection);
+        myFirebaseEEGRef.child("delta").child(currentTime).setValue(deltaCollection);
+        myFirebaseEEGRef.child("gamma").child(currentTime).setValue(gammaCollection);
+        myFirebaseEEGRef.child("theta").child(currentTime).setValue(thetaCollection);
     }
 
     private double setAverageAlphaBuffer() {
@@ -357,21 +398,24 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
             if(pauseButton.getText().toString().toLowerCase().equals("pause")) {
                 pauseButton.setText("Resume");
                 countUpTimer.pause();
-                manager.stopListening();
                 muse.unregisterAllListeners();
+                handler.removeCallbacks(tickUi);
+
+                String endTime = standardDateFormat.format(new Date());
+                myFirebaseTimeRef.child("endTime").setValue(endTime);
             }else{
                 pauseButton.setText("Pause");
                 countUpTimer.resume();
-                manager.startListening();
-                registerMuseDataListeners();
+                registerMuseListeners();
+                handler.post(tickUi);
             }
         }else if(v.getId() == R.id.sessionStopButton) {
             countUpTimer.stop();
-            manager.stopListening();
             muse.unregisterAllListeners();
+            handler.removeCallbacks(tickUi);
 
             String endTime = standardDateFormat.format(new Date());
-            myFirebaseTimeRef.child("EndTime").setValue(endTime);
+            myFirebaseTimeRef.child("endTime").setValue(endTime);
         }
     }
 
