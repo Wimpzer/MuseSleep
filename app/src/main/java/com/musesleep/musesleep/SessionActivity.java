@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SessionActivity extends AppCompatActivity implements OnClickListener {
     private final String TAG = "MUSESLEEP";
     private final String FIREBASE_WAVE_TAG = "EEGs";
-    private final String FIREBASE_STARTTIME_TAG = "StartTime";
+    private final String FIREBASE_TIME_TAG = "Time";
 
     private MuseManagerAndroid manager = null;
     private Muse muse = null;
@@ -60,10 +60,13 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private FirebaseDatabase myFirebaseInstance;
     private DatabaseReference myFirebaseBaseRef;
     private DatabaseReference myFirebaseRef;
+    private DatabaseReference myFirebaseEEGRef;
+    private DatabaseReference myFirebaseTimeRef;
     private String firebaseSessionId;
 
     private CountUpTimer countUpTimer;
     private Button pauseButton;
+    private SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,16 +84,19 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         dataListener = new DataListener(weakActivity);
         manager.startListening();
 
-        // Sets the Firebase reference to the current sessionId
+        // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
 //        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
         firebaseSessionId = myFirebaseBaseRef.push().getKey();
-        myFirebaseRef = myFirebaseInstance.getReference(firebaseSessionId); // .setPersistenceEnalbed(true) hvis den skal virke offline
+
+        // .setPersistenceEnalbed(true) needs to added for offline use
+        myFirebaseEEGRef = myFirebaseInstance.getReference(FIREBASE_WAVE_TAG).child(firebaseSessionId);
+        myFirebaseTimeRef = myFirebaseInstance.getReference(FIREBASE_TIME_TAG).child(firebaseSessionId);
 
         // Sets the start time variable for the current session
-        String startTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        myFirebaseRef.child(FIREBASE_STARTTIME_TAG).setValue(startTime);
+        String startTime = standardDateFormat.format(new Date());
+        myFirebaseTimeRef.child("StartTime").setValue(startTime);
 
 //        muse = manager.getMuses().get(musePosition);
         muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
@@ -132,6 +138,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     protected void onPause() {
         super.onPause();
         manager.stopListening();
+        String endTime = standardDateFormat.format(new Date());
+        myFirebaseTimeRef.child("EndTime").setValue(endTime);
     }
 
     @Override
@@ -144,6 +152,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     protected void onDestroy() {
         super.onDestroy();
         manager.stopListening();
+        String endTime = standardDateFormat.format(new Date());
+        myFirebaseTimeRef.child("EndTime").setValue(endTime);
     }
 
     // Helper methods to get different packet values
@@ -276,14 +286,14 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
             thetaWave = 0;
         Log.d(TAG, "updateTheta - thetaWave: " + thetaWave);
 
-        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS").format(new Date());
+        String currentTime = standardDateFormat.format(new Date());
         Map<String, Double> waveCollection = new HashMap<>();
         waveCollection.put("alphaWave", alphaWave);
         waveCollection.put("betaWave", betaWave);
         waveCollection.put("deltaWave", deltaWave);
         waveCollection.put("gammaWave", gammaWave);
         waveCollection.put("thetaWave", thetaWave);
-        myFirebaseRef.child(FIREBASE_WAVE_TAG).child(currentTime).setValue(waveCollection);
+        myFirebaseEEGRef.child(currentTime).setValue(waveCollection);
     }
 
     private double setAverageAlphaBuffer() {
@@ -359,6 +369,9 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
             countUpTimer.stop();
             manager.stopListening();
             muse.unregisterAllListeners();
+
+            String endTime = standardDateFormat.format(new Date());
+            myFirebaseTimeRef.child("EndTime").setValue(endTime);
         }
     }
 
