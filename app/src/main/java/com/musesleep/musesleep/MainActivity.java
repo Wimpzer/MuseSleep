@@ -107,8 +107,8 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_session) {
-            Intent sessionActivity = new Intent(this, SessionActivity.class);
-            startActivity(sessionActivity);
+            Intent mainActivity = new Intent(this, MainActivity.class);
+            startActivity(mainActivity);
         } else if (id == R.id.nav_history) {
             Intent pastSessionsListActivity = new Intent(this, PastSessionsListActivity.class);
             startActivity(pastSessionsListActivity);

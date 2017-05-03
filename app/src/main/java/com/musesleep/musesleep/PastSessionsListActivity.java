@@ -3,7 +3,6 @@ package com.musesleep.musesleep;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -50,7 +49,7 @@ public class PastSessionsListActivity extends MainActivity {
 
         addEventsToRecyclerView();
 
-        recyclerView = (RecyclerView) findViewById(R.id.pastSessionsRecyclerView);
+        recyclerView = (RecyclerView) findViewById(R.id.pastSessionsListRecyclerView);
 
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
