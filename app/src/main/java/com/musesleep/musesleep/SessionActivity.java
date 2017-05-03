@@ -23,6 +23,8 @@ import com.choosemuse.libmuse.MuseFileWriter;
 import com.choosemuse.libmuse.MuseVersion;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.musesleep.musesleep.Adapter.MuseAdapter;
+import com.musesleep.musesleep.Object.StopWatchObject;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -63,7 +65,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private DatabaseReference myFirebaseTimeRef;
     private String firebaseSessionId;
 
-    private CountUpTimer countUpTimer;
+    private StopWatchObject stopWatchObject;
     private Button pauseButton;
     private SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
 
@@ -95,10 +97,10 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         myFirebaseTimeRef.child("startTime").setValue(startTime);
 
 //        muse = manager.getMuses().get(musePosition);
-        muse = MuseManager.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
+        muse = MuseAdapter.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
 
         final TextView sessionTimerTextView = (TextView) findViewById(R.id.sessionTimerTextView);
-        countUpTimer = new CountUpTimer(1000) {
+        stopWatchObject = new StopWatchObject(1000) {
             @Override
             public void onTick(long elapsedTime) {
                 int totalTime = (int) (elapsedTime/1000);
@@ -107,7 +109,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 sessionTimerTextView.setText(minutes + ":" + seconds);
             }
         };
-        countUpTimer.start();
+        stopWatchObject.start();
 
         // Sets OnClickListener on the buttons
         Button stopButton = (Button) findViewById(R.id.sessionStopButton);
@@ -397,7 +399,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         if(v.getId() == R.id.sessionPauseButton) {
             if(pauseButton.getText().toString().toLowerCase().equals("pause")) {
                 pauseButton.setText("Resume");
-                countUpTimer.pause();
+                stopWatchObject.pause();
                 muse.unregisterAllListeners();
                 handler.removeCallbacks(tickUi);
 
@@ -405,12 +407,12 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 myFirebaseTimeRef.child("endTime").setValue(endTime);
             }else{
                 pauseButton.setText("Pause");
-                countUpTimer.resume();
+                stopWatchObject.resume();
                 registerMuseListeners();
                 handler.post(tickUi);
             }
         }else if(v.getId() == R.id.sessionStopButton) {
-            countUpTimer.stop();
+            stopWatchObject.stop();
             muse.unregisterAllListeners();
             handler.removeCallbacks(tickUi);
 

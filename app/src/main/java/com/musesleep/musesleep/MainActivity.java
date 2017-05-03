@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity
             introDialog.show();
         }
 
-        // Saving the context for later use in MuseManager Singleton
+        // Saving the context for later use in MuseAdapter Singleton
         appContext = this;
 
         // Initiating clickable views and sets OnClickListener

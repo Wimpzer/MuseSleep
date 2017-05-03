@@ -1,17 +1,17 @@
-package com.musesleep.musesleep;
+package com.musesleep.musesleep.Object;
 
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 
-public abstract class CountUpTimer {
+public abstract class StopWatchObject {
 
     private final long interval;
     private long base;
     private long pausedElapsedTime;
     private boolean haveResumed;
 
-    public CountUpTimer(long interval) {
+    public StopWatchObject(long interval) {
         this.interval = interval;
         haveResumed = false;
     }
@@ -50,7 +50,7 @@ public abstract class CountUpTimer {
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            synchronized (CountUpTimer.this) {
+            synchronized (StopWatchObject.this) {
                 long elapsedTime = SystemClock.elapsedRealtime() - base;
                 if(haveResumed)
                     elapsedTime += pausedElapsedTime;

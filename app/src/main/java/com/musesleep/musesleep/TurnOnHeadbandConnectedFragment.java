@@ -13,6 +13,7 @@ import android.widget.ListView;
 
 import com.choosemuse.libmuse.Muse;
 import com.choosemuse.libmuse.MuseManagerAndroid;
+import com.musesleep.musesleep.Adapter.MuseAdapter;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class TurnOnHeadbandConnectedFragment extends Fragment implements OnItemC
         View rootView = inflater.inflate(R.layout.turn_on_headband_connected_fragment, container, false);
 
         // Fetch the names and MacAddresses of connected muses and store them in string array
-        MuseManagerAndroid manager = MuseManager.getInstance().getManager();
+        MuseManagerAndroid manager = MuseAdapter.getInstance().getManager();
         List<Muse> pairedMuses = manager.getMuses();
 
         int musesAmount = pairedMuses.size();
@@ -48,7 +49,7 @@ public class TurnOnHeadbandConnectedFragment extends Fragment implements OnItemC
         museListView.setAdapter(listViewAdapter);
         museListView.setOnItemClickListener(this);
 
-        MuseManager.getInstance().setMuseList(pairedMuses);
+        MuseAdapter.getInstance().setMuseList(pairedMuses);
 
         return rootView;
     }

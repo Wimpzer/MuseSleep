@@ -1,27 +1,28 @@
-package com.musesleep.musesleep;
+package com.musesleep.musesleep.Adapter;
 
 import android.content.Context;
 
 import com.choosemuse.libmuse.Muse;
 import com.choosemuse.libmuse.MuseListener;
 import com.choosemuse.libmuse.MuseManagerAndroid;
+import com.musesleep.musesleep.MainActivity;
 
 import java.util.List;
 
-public class MuseManager {
+public class MuseAdapter {
 
-    private static MuseManager instance;
+    private static MuseAdapter instance;
     private static Context context = MainActivity.getAppContext();
     private List<Muse> museList;
 
-    private MuseManager() {
+    private MuseAdapter() {
     }
 
-    public static MuseManager getInstance() { // Double checked Thread safe implementation
+    public static MuseAdapter getInstance() { // Double checked Thread safe implementation
         if(instance == null) {
-            synchronized (MuseManager.class) {
+            synchronized (MuseAdapter.class) {
                 if(instance == null) {
-                    instance = new MuseManager();
+                    instance = new MuseAdapter();
                 }
             }
         }

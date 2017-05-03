@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.choosemuse.libmuse.Muse;
 import com.choosemuse.libmuse.MuseListener;
 import com.choosemuse.libmuse.MuseManagerAndroid;
+import com.musesleep.musesleep.Adapter.MuseAdapter;
 
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class TurnOnHeadbandActivity extends AppCompatActivity {
         fragmentTransaction.replace(R.id.turnOnFragment, disconnectedFragment);
         fragmentTransaction.commit();
 
-        MuseManager.getInstance().setContext();
-        manager = MuseManager.getInstance().getManager();
+        MuseAdapter.getInstance().setContext();
+        manager = MuseAdapter.getInstance().getManager();
         MuseListener museListener = new MuseListener() {
             @Override
             public void museListChanged() {
