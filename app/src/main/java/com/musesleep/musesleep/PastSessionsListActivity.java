@@ -1,6 +1,9 @@
 package com.musesleep.musesleep;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -22,7 +25,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-public class PastSessionsActivity extends MainActivity {
+public class PastSessionsListActivity extends MainActivity {
 
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
@@ -78,14 +81,19 @@ public class PastSessionsActivity extends MainActivity {
                     // Creates the time of day
                     int time = Integer.parseInt(dateString.substring(11,13));
                     String timeOfDay = "";
+                    Drawable timeOfDayPicture = null;
                     if(0 <= time && time < 6) {
                         timeOfDay = "night";
+                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.night);
                     }else if(6 <= time && time < 12) {
                         timeOfDay = "morning";
+                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.morning);
                     }else if(12 <= time && time < 18) {
                         timeOfDay = "afternoon";
+                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.afternoon);
                     }else if(18 <= time && time < 24) {
                         timeOfDay = "evening";
+                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.evening);
                     }
 
                     // Creates the day of the week
@@ -129,15 +137,14 @@ public class PastSessionsActivity extends MainActivity {
 
                     // Collects the above into a PastSessionObject
                     String upperText = dayOfWeek + " " + timeOfDay;
-                    pastSessions.add(new PastSessionObject(upperText, shortDate, null));
+                    pastSessions.add(new PastSessionObject(upperText, shortDate, timeOfDayPicture));
                 }
-
                 adapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e("PastSessionsActivity", "onCancelled", databaseError.toException());
+                Log.e("PastSessionsListAct", "onCancelled", databaseError.toException());
             }
         });
     }

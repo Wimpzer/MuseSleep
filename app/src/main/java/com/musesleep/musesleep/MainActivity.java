@@ -110,8 +110,8 @@ public class MainActivity extends AppCompatActivity
             Intent sessionActivity = new Intent(this, SessionActivity.class);
             startActivity(sessionActivity);
         } else if (id == R.id.nav_history) {
-            Intent pastSessionsActivity = new Intent(this, PastSessionsActivity.class);
-            startActivity(pastSessionsActivity);
+            Intent pastSessionsListActivity = new Intent(this, PastSessionsListActivity.class);
+            startActivity(pastSessionsListActivity);
         } else if (id == R.id.nav_settings) {
 //            Intent settingsIntent = new Intent(this, SettingsActivity.class);
 //            startActivity(settingsIntent);

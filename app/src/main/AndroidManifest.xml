@@ -38,7 +38,7 @@
             android:name=".SignalQualityActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".PastSessionsActivity"
+            android:name=".PastSessionsListActivity"
             android:screenOrientation="portrait" />
     </application>
 
