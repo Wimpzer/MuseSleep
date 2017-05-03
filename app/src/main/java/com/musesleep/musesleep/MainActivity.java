@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity
     private static final int TIME_BUFFER_RESULT_CODE = 1;
     private static final int ALARM_SOUND_RESULT_CODE = 2;
     private static Context appContext;
+    protected DrawerLayout drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -106,11 +107,11 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_session) {
-//            Intent sessionActivity = new Intent(this, SessionActivity.class);
-//            startActivity(sessionActivity);
+            Intent sessionActivity = new Intent(this, SessionActivity.class);
+            startActivity(sessionActivity);
         } else if (id == R.id.nav_history) {
-//            Intent historyIntent = new Intent(this, HistoryActivity.class);
-//            startActivity(historyIntent);
+            Intent pastSessionsActivity = new Intent(this, PastSessionsActivity.class);
+            startActivity(pastSessionsActivity);
         } else if (id == R.id.nav_settings) {
 //            Intent settingsIntent = new Intent(this, SettingsActivity.class);
 //            startActivity(settingsIntent);
