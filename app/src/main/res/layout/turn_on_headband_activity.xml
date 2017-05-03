@@ -23,14 +23,4 @@
         android:layout_height="0dp"
         android:layout_weight="3">
     </LinearLayout>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@drawable/faqbutton"
-        android:layout_margin="10dp"
-        android:textColor="@color/textColor"
-        android:text="FAQ"/>
-
 </LinearLayout>
