@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -19,13 +18,10 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final int TIME_BUFFER_RESULT_CODE = 1;
-    private static final int ALARM_SOUND_RESULT_CODE = 2;
     private static Context appContext;
     protected DrawerLayout drawer;
 
@@ -134,21 +130,5 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            String result = data.getStringExtra("selectedValue");
-            if (requestCode == TIME_BUFFER_RESULT_CODE) {
-                TextView timeBufferTextView = (TextView) findViewById(R.id.timeBufferTextView);
-                timeBufferTextView.setText(result + " min");
-            } else if (requestCode == ALARM_SOUND_RESULT_CODE) {
-                TextView alarmSoundTextView = (TextView) findViewById(R.id.alarmSoundTextView);
-                alarmSoundTextView.setText(result);
-            }
-        }
     }
 }

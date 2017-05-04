@@ -8,6 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import static android.app.Activity.RESULT_OK;
 
 public class MainFragment extends Fragment implements View.OnClickListener {
 
@@ -54,4 +57,19 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            String result = data.getStringExtra("selectedValue");
+            if (requestCode == TIME_BUFFER_RESULT_CODE) {
+                TextView timeBufferTextView = (TextView) rootView.findViewById(R.id.timeBufferTextView);
+                timeBufferTextView.setText(result + " min");
+            } else if (requestCode == ALARM_SOUND_RESULT_CODE) {
+                TextView alarmSoundTextView = (TextView) rootView.findViewById(R.id.alarmSoundTextView);
+                alarmSoundTextView.setText(result);
+            }
+        }
+    }
 }
