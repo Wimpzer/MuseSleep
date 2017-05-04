@@ -39,11 +39,7 @@ public class MainActivity extends AppCompatActivity
 
         Fragment main = new MainFragment();
         fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.mainFragmentHolder, main);
-        fragmentTransaction.commit();
-
-
+        replaceFragment(main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -85,16 +81,12 @@ public class MainActivity extends AppCompatActivity
 
         // Saving the context for later use in MuseAdapter Singleton
         appContext = this;
+    }
 
-//        // Initiating clickable views and sets OnClickListener
-//        Button startSessionButton = (Button) findViewById(R.id.startSessionButton);
-//        startSessionButton.setOnClickListener(this);
-//
-//        ImageView timeBufferImageView = (ImageView) findViewById(R.id.timeBufferImageView);
-//        timeBufferImageView.setOnClickListener(this);
-//
-//        ImageView alarmSoundImageView = (ImageView) findViewById(R.id.alarmSoundImageView);
-//        alarmSoundImageView.setOnClickListener(this);
+    private void replaceFragment(Fragment fragment) {
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.mainFragmentHolder, fragment);
+        fragmentTransaction.commit();
     }
 
     public static Context getAppContext() {
@@ -107,7 +99,13 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            Fragment f = this.getSupportFragmentManager().findFragmentById(R.id.mainFragmentHolder);
+            if(f instanceof MainFragment)
+                super.onBackPressed();
+            else {
+                Fragment fragment = new MainFragment();
+                replaceFragment(fragment);
+            }
         }
     }
 
@@ -132,9 +130,7 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.mainFragmentHolder, fragment);
-        fragmentTransaction.commit();
+        replaceFragment(fragment);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -155,10 +151,4 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
-
 }
