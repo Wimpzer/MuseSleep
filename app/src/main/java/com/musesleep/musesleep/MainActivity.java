@@ -9,6 +9,9 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,23 +19,31 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int TIME_BUFFER_RESULT_CODE = 1;
     private static final int ALARM_SOUND_RESULT_CODE = 2;
     private static Context appContext;
     protected DrawerLayout drawer;
 
+    private FragmentManager fragmentManager;
+    private FragmentTransaction fragmentTransaction;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Fragment main = new MainFragment();
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.mainFragmentHolder, main);
+        fragmentTransaction.commit();
+
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -75,15 +86,15 @@ public class MainActivity extends AppCompatActivity
         // Saving the context for later use in MuseAdapter Singleton
         appContext = this;
 
-        // Initiating clickable views and sets OnClickListener
-        Button startSessionButton = (Button) findViewById(R.id.startSessionButton);
-        startSessionButton.setOnClickListener(this);
-
-        ImageView timeBufferImageView = (ImageView) findViewById(R.id.timeBufferImageView);
-        timeBufferImageView.setOnClickListener(this);
-
-        ImageView alarmSoundImageView = (ImageView) findViewById(R.id.alarmSoundImageView);
-        alarmSoundImageView.setOnClickListener(this);
+//        // Initiating clickable views and sets OnClickListener
+//        Button startSessionButton = (Button) findViewById(R.id.startSessionButton);
+//        startSessionButton.setOnClickListener(this);
+//
+//        ImageView timeBufferImageView = (ImageView) findViewById(R.id.timeBufferImageView);
+//        timeBufferImageView.setOnClickListener(this);
+//
+//        ImageView alarmSoundImageView = (ImageView) findViewById(R.id.alarmSoundImageView);
+//        alarmSoundImageView.setOnClickListener(this);
     }
 
     public static Context getAppContext() {
@@ -105,13 +116,12 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        Fragment fragment = null;
 
         if (id == R.id.nav_session) {
-            Intent mainActivity = new Intent(this, MainActivity.class);
-            startActivity(mainActivity);
+            fragment = new MainFragment();
         } else if (id == R.id.nav_history) {
-            Intent pastSessionsListActivity = new Intent(this, PastSessionsListActivity.class);
-            startActivity(pastSessionsListActivity);
+            fragment = new PastSessionsListFragment();
         } else if (id == R.id.nav_settings) {
 //            Intent settingsIntent = new Intent(this, SettingsActivity.class);
 //            startActivity(settingsIntent);
@@ -121,27 +131,13 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_signout) {
 
         }
+
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.mainFragmentHolder, fragment);
+        fragmentTransaction.commit();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.startSessionButton) {
-            Intent startSessionIntent = new Intent(this, TurnOnHeadbandActivity.class);
-            startActivity(startSessionIntent);
-        } else if (v.getId() == R.id.timeBufferImageView) {
-            Intent timeBufferIntent = new Intent(this, ListViewActivity.class);
-            timeBufferIntent.putExtra("headline", getString(R.string.time_buffer_headline));
-            timeBufferIntent.putExtra("array", R.array.time_buffer_array);
-            startActivityForResult(timeBufferIntent, TIME_BUFFER_RESULT_CODE);
-        } else if (v.getId() == R.id.alarmSoundImageView) {
-            Intent timeBufferIntent = new Intent(this, ListViewActivity.class);
-            timeBufferIntent.putExtra("headline", getString(R.string.alarm_sound_headline));
-            timeBufferIntent.putExtra("array", R.array.alarm_sound_array);
-            startActivityForResult(timeBufferIntent, ALARM_SOUND_RESULT_CODE);
-        }
     }
 
     @Override
@@ -159,4 +155,10 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
 }

@@ -2,10 +2,14 @@ package com.musesleep.musesleep;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -24,7 +28,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-public class PastSessionsListActivity extends MainActivity {
+public class PastSessionsListFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
@@ -35,27 +39,31 @@ public class PastSessionsListActivity extends MainActivity {
     private DatabaseReference myFirebaseBaseRef;
     private DatabaseReference myFirebaseTimeRef;
 
-    private int amountLoaded;
+    private View rootView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.past_sessions_activity);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                Bundle savedInstanceState) {
+        rootView = inflater.inflate(R.layout.past_sessions_list_fragment, container, false);
 
         // Sets the Firebase references
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
         myFirebaseTimeRef = myFirebaseBaseRef.child("Time");
 
+        return rootView;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+
         addEventsToRecyclerView();
 
-        recyclerView = (RecyclerView) findViewById(R.id.pastSessionsListRecyclerView);
+        recyclerView = (RecyclerView) view.findViewById(R.id.pastSessionsListRecyclerView);
 
         recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(this);
+        layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
-
-        amountLoaded = 0;
     }
 
     private void addEventsToRecyclerView() {
@@ -74,7 +82,6 @@ public class PastSessionsListActivity extends MainActivity {
                 recyclerView.setAdapter(adapter);
 
                 for(FirebaseTimeObject timeObject : timeObjects) {
-                    //TODO: Create images according to timeOfDay and add to the PastSessionObject
                     String dateString = timeObject.getStartTime();
 
                     // Creates the time of day
@@ -83,16 +90,16 @@ public class PastSessionsListActivity extends MainActivity {
                     Drawable timeOfDayPicture = null;
                     if(0 <= time && time < 6) {
                         timeOfDay = "night";
-                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.night);
+                        timeOfDayPicture = ContextCompat.getDrawable(getContext(), R.drawable.night);
                     }else if(6 <= time && time < 12) {
                         timeOfDay = "morning";
-                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.morning);
+                        timeOfDayPicture = ContextCompat.getDrawable(getContext(), R.drawable.morning);
                     }else if(12 <= time && time < 18) {
                         timeOfDay = "afternoon";
-                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.afternoon);
+                        timeOfDayPicture = ContextCompat.getDrawable(getContext(), R.drawable.afternoon);
                     }else if(18 <= time && time < 24) {
                         timeOfDay = "evening";
-                        timeOfDayPicture = ContextCompat.getDrawable(getAppContext(), R.drawable.evening);
+                        timeOfDayPicture = ContextCompat.getDrawable(getContext(), R.drawable.evening);
                     }
 
                     // Creates the day of the week
