@@ -1,5 +1,6 @@
 package com.musesleep.musesleep;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -20,12 +21,7 @@ import com.musesleep.musesleep.adapter.RecyclerViewAdapter;
 import com.musesleep.musesleep.object.FirebaseTimeObject;
 import com.musesleep.musesleep.object.PastSessionObject;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 public class PastSessionsListFragment extends Fragment {
@@ -34,6 +30,7 @@ public class PastSessionsListFragment extends Fragment {
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private ArrayList<PastSessionObject> pastSessions;
+    private ArrayList<String> sessionIds;
 
     private FirebaseDatabase myFirebaseInstance;
     private DatabaseReference myFirebaseBaseRef;
@@ -50,6 +47,8 @@ public class PastSessionsListFragment extends Fragment {
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
         myFirebaseTimeRef = myFirebaseBaseRef.child("Time");
+
+        sessionIds = new ArrayList<>();
 
         return rootView;
     }
@@ -75,6 +74,7 @@ public class PastSessionsListFragment extends Fragment {
                 for(DataSnapshot child : dataSnapshot.getChildren()) {
                     FirebaseTimeObject timeObject = child.getValue(FirebaseTimeObject.class);
                     timeObjects.add(timeObject);
+                    sessionIds.add(child.getKey());
                 }
 
                 pastSessions = new ArrayList<>();
@@ -102,41 +102,8 @@ public class PastSessionsListFragment extends Fragment {
                         timeOfDayPicture = ContextCompat.getDrawable(getContext(), R.drawable.evening);
                     }
 
-                    // Creates the day of the week
-                    Calendar calendar = new GregorianCalendar();
-                    Date date = new Date();
-                    SimpleDateFormat date_format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
-                    try {
-                        date = date_format.parse(dateString);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    calendar.setTime(date);
-                    int result = calendar.get(Calendar.DAY_OF_WEEK);
-                    String dayOfWeek = "";
-                    switch (result) {
-                        case Calendar.MONDAY:
-                            dayOfWeek = "Monday";
-                            break;
-                        case Calendar.TUESDAY:
-                            dayOfWeek = "Tuesday";
-                            break;
-                        case Calendar.WEDNESDAY:
-                            dayOfWeek = "Wednesday";
-                            break;
-                        case Calendar.THURSDAY:
-                            dayOfWeek = "Thursday";
-                            break;
-                        case Calendar.FRIDAY:
-                            dayOfWeek = "Friday";
-                            break;
-                        case Calendar.SATURDAY:
-                            dayOfWeek = "Saturday";
-                            break;
-                        case Calendar.SUNDAY:
-                            dayOfWeek = "Sunday";
-                            break;
-                    }
+                    // Gets the day of the week
+                    String dayOfWeek = timeObject.getStartDay();
 
                     // Creates short date
                     String shortDate = dateString.substring(0, 10);
@@ -146,6 +113,16 @@ public class PastSessionsListFragment extends Fragment {
                     pastSessions.add(new PastSessionObject(upperText, shortDate, timeOfDayPicture));
                 }
                 adapter.notifyDataSetChanged();
+
+                ((RecyclerViewAdapter) adapter).setOnItemClickListener(new RecyclerViewAdapter.MyClickListener() {
+                    @Override
+                    public void onItemClick(int position, View v) {
+                        String sessionId = sessionIds.get(position);
+                        Intent pastSessionIntent = new Intent(getActivity(), PastSessionActivity.class);
+                        pastSessionIntent.putExtra("sessionId", sessionId);
+                        startActivity(pastSessionIntent);
+                    }
+                });
             }
 
             @Override

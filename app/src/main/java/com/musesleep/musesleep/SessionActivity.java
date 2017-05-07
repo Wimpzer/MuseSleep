@@ -97,16 +97,19 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
-//        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
+        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
         firebaseSessionId = myFirebaseBaseRef.push().getKey();
 
-        // .setPersistenceEnalbed(true) needs to added for offline use
+        // .setPersistenceEnabled(true) needs to added for offline use
         myFirebaseEEGRef = myFirebaseInstance.getReference(FIREBASE_WAVE_TAG).child(firebaseSessionId);
         myFirebaseTimeRef = myFirebaseInstance.getReference(FIREBASE_TIME_TAG).child(firebaseSessionId);
 
-        // Sets the start time variable for the current session
-        String startTime = standardDateFormat.format(new Date());
+        // Sets the start time and start day for the current session
+        Date date = new Date();
+        String startTime = standardDateFormat.format(date);
         myFirebaseTimeRef.child("startTime").setValue(startTime);
+        String dayOfWeek = getDayOfWeekFromCalendar(date.getDay());
+        myFirebaseTimeRef.child("startDay").setValue(dayOfWeek);
 
 //        muse = manager.getMuses().get(musePosition);
         muse = MuseAdapter.getInstance().getMuseList().get(musePosition); // TODO: Redo this hack
@@ -145,8 +148,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     @Override
     protected void onPause() {
         super.onPause();
-        String endTime = standardDateFormat.format(new Date());
-        myFirebaseTimeRef.child("endTime").setValue(endTime);
+        setEndTime();
     }
 
     @Override
@@ -161,9 +163,9 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        String endTime = standardDateFormat.format(new Date());
-        myFirebaseTimeRef.child("endTime").setValue(endTime);
+        setEndTime();
         muse.unregisterAllListeners();
+        muse.disconnect(false);
         handler.removeCallbacks(tickUi);
         handler.removeCallbacks(tickAlarmBuffer);
     }
@@ -480,8 +482,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 handler.removeCallbacks(tickUi);
                 handler.removeCallbacks(tickAlarmBuffer);
 
-                String endTime = standardDateFormat.format(new Date());
-                myFirebaseTimeRef.child("endTime").setValue(endTime);
+                setEndTime();
             }else{
                 pauseButton.setText("Pause");
                 stopWatchObject.resume();
@@ -492,12 +493,54 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         }else if(v.getId() == R.id.sessionStopButton) {
             stopWatchObject.stop();
             muse.unregisterAllListeners();
+            muse.disconnect(false);
             handler.removeCallbacks(tickUi);
             handler.removeCallbacks(tickAlarmBuffer);
 
-            String endTime = standardDateFormat.format(new Date());
-            myFirebaseTimeRef.child("endTime").setValue(endTime);
+            setEndTime();
+
+            Intent pastSessionIntent = new Intent(this, PastSessionActivity.class);
+            pastSessionIntent.putExtra("sessionId", firebaseSessionId);
+            startActivity(pastSessionIntent);
+            finish();
         }
+    }
+
+    private void setEndTime() {
+        Date date = new Date();
+        String endTime = standardDateFormat.format(date);
+        myFirebaseTimeRef.child("endTime").setValue(endTime);
+        String dayOfWeek = getDayOfWeekFromCalendar(date.getDay());
+        myFirebaseTimeRef.child("endDay").setValue(dayOfWeek);
+    }
+
+    private String getDayOfWeekFromCalendar(int dayInt) {
+        dayInt++;
+        String dayOfWeek = "";
+        switch (dayInt) {
+            case Calendar.MONDAY:
+                dayOfWeek = "Monday";
+                break;
+            case Calendar.TUESDAY:
+                dayOfWeek = "Tuesday";
+                break;
+            case Calendar.WEDNESDAY:
+                dayOfWeek = "Wednesday";
+                break;
+            case Calendar.THURSDAY:
+                dayOfWeek = "Thursday";
+                break;
+            case Calendar.FRIDAY:
+                dayOfWeek = "Friday";
+                break;
+            case Calendar.SATURDAY:
+                dayOfWeek = "Saturday";
+                break;
+            case Calendar.SUNDAY:
+                dayOfWeek = "Sunday";
+                break;
+        }
+        return dayOfWeek;
     }
 
     // Listener translators follow.
