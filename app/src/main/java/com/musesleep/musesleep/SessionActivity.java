@@ -168,6 +168,11 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         handler.removeCallbacks(tickAlarmBuffer);
     }
 
+    @Override
+    public void onBackPressed() {
+        moveTaskToBack(true);
+    }
+
     // Helper methods to get different packet values
     private void getEegChannelValues(double[] buffer, MuseDataPacket p) {
         buffer[0] = p.getEegChannelValue(Eeg.EEG1);
