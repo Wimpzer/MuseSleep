@@ -1,17 +1,15 @@
 package com.musesleep.musesleep;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -49,34 +47,27 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // The ACCESS_COARSE_LOCATION permission is required to use the
-        // BlueTooth LE library and must be requested at runtime for Android 6.0+
-        // On an Android 6.0 device, the following code will display 2 dialogs,
-        // one to provide context and the second to request the permission.
-        // On an Android device running an earlier version, nothing is displayed
-        // as the permission is granted from the manifest.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            DialogInterface.OnClickListener buttonListener =
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which){
-                            dialog.dismiss();
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN},
-                                    0);
-                        }
-                    };
+        int permissionsAll = 1;
+        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.SET_ALARM};
 
-            AlertDialog introDialog = new AlertDialog.Builder(this)
-                    .setTitle("Muse Needs Your Permission")
-                    .setMessage("Muse needs a few permissions to work properly. On the next screens, tap \"Allow\" to proceed. If you deny, Muse will not work properly until you go into your Android settings and allow.")
-                    .setPositiveButton("I Understand", buttonListener)
-                    .create();
-            introDialog.show();
+        if(!hasPermissions(this, permissions)) {
+            ActivityCompat.requestPermissions(this, permissions, permissionsAll);
         }
 
         // Saving the context for later use in MuseAdapter Singleton
         appContext = this;
+    }
+
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void replaceFragment(Fragment fragment) {

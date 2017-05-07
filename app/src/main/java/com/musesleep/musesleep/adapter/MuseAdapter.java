@@ -1,4 +1,4 @@
-package com.musesleep.musesleep.Adapter;
+package com.musesleep.musesleep.adapter;
 
 import android.content.Context;
 

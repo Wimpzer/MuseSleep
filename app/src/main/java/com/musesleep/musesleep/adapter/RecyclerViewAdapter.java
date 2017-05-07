@@ -1,4 +1,4 @@
-package com.musesleep.musesleep.Adapter;
+package com.musesleep.musesleep.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.musesleep.musesleep.Object.PastSessionObject;
+import com.musesleep.musesleep.object.PastSessionObject;
 import com.musesleep.musesleep.R;
 
 import java.util.ArrayList;

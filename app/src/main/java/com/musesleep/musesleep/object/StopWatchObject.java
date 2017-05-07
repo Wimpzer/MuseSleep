@@ -1,4 +1,4 @@
-package com.musesleep.musesleep.Object;
+package com.musesleep.musesleep.object;
 
 import android.os.Handler;
 import android.os.Message;

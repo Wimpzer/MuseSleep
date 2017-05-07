@@ -1,4 +1,4 @@
-package com.musesleep.musesleep.Object;
+package com.musesleep.musesleep.object;
 
 public class FirebaseTimeObject {
 

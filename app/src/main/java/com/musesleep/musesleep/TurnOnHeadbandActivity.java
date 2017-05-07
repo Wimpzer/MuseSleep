@@ -9,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.choosemuse.libmuse.Muse;
 import com.choosemuse.libmuse.MuseListener;
 import com.choosemuse.libmuse.MuseManagerAndroid;
-import com.musesleep.musesleep.Adapter.MuseAdapter;
+import com.musesleep.musesleep.adapter.MuseAdapter;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class TurnOnHeadbandActivity extends AppCompatActivity {
     private MuseManagerAndroid manager = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.turn_on_headband_activity);
 
@@ -38,6 +38,9 @@ public class TurnOnHeadbandActivity extends AppCompatActivity {
                     Fragment connectedFragment = new TurnOnHeadbandConnectedFragment();
 
                     manager.stopListening();
+
+                    Bundle bundle = getIntent().getExtras();
+                    connectedFragment.setArguments(bundle);
 
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

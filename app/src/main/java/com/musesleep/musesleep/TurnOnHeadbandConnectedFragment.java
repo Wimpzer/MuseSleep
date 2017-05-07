@@ -13,7 +13,7 @@ import android.widget.ListView;
 
 import com.choosemuse.libmuse.Muse;
 import com.choosemuse.libmuse.MuseManagerAndroid;
-import com.musesleep.musesleep.Adapter.MuseAdapter;
+import com.musesleep.musesleep.adapter.MuseAdapter;
 
 import java.util.List;
 
@@ -58,6 +58,7 @@ public class TurnOnHeadbandConnectedFragment extends Fragment implements OnItemC
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent intent = new Intent(getActivity(), SessionActivity.class);
         intent.putExtra("MusePosition", position);
+        intent.putExtra("startValues", this.getArguments());
 
         startActivity(intent);
     }

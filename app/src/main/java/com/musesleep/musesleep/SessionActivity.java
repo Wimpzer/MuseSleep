@@ -3,6 +3,8 @@ package com.musesleep.musesleep;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.AlarmClock;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,12 +25,15 @@ import com.choosemuse.libmuse.MuseFileWriter;
 import com.choosemuse.libmuse.MuseVersion;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.musesleep.musesleep.Adapter.MuseAdapter;
-import com.musesleep.musesleep.Object.StopWatchObject;
+import com.musesleep.musesleep.adapter.MuseAdapter;
+import com.musesleep.musesleep.object.StopWatchObject;
 
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,7 +42,9 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private final String TAG = "MUSESLEEP";
     private final String FIREBASE_WAVE_TAG = "EEGs";
     private final String FIREBASE_TIME_TAG = "Time";
-    private final int TICKTIMER = 1000/2;
+    private final int UITICKTIMER = 1000/2;
+    private final int ALARMBUFFERTICKTIMER = 1000*60;
+    private final SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
 
     private Muse muse = null;
     private ConnectionListener connectionListener = null;
@@ -60,22 +67,27 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
     private FirebaseDatabase myFirebaseInstance;
     private DatabaseReference myFirebaseBaseRef;
-    private DatabaseReference myFirebaseRef;
     private DatabaseReference myFirebaseEEGRef;
     private DatabaseReference myFirebaseTimeRef;
     private String firebaseSessionId;
 
     private StopWatchObject stopWatchObject;
     private Button pauseButton;
-    private SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
+
+    private int timeBuffer;
+    private String alarmSound;
+    private boolean isFirstTime = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.session_activity);
 
+        // Gets extras
         Intent intent = getIntent();
         int musePosition = intent.getIntExtra("MusePosition", 0);
+        timeBuffer = intent.getBundleExtra("startValues").getInt("timeBuffer", 0);
+        alarmSound = intent.getBundleExtra("startValues").getString("alarmSound");
 
         WeakReference<SessionActivity> weakActivity =
                 new WeakReference<>(this);
@@ -143,6 +155,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         muse.unregisterAllListeners();
         registerMuseListeners();
         handler.post(tickUi);
+        handler.post(tickAlarmBuffer);
     }
 
     @Override
@@ -152,6 +165,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         myFirebaseTimeRef.child("endTime").setValue(endTime);
         muse.unregisterAllListeners();
         handler.removeCallbacks(tickUi);
+        handler.removeCallbacks(tickAlarmBuffer);
     }
 
     // Helper methods to get different packet values
@@ -261,7 +275,15 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         @Override
         public void run() {
             updateEeg();
-            handler.postDelayed(tickUi, TICKTIMER);
+            handler.postDelayed(tickUi, UITICKTIMER);
+        }
+    };
+
+    private final Runnable tickAlarmBuffer = new Runnable() {
+        @Override
+        public void run() {
+            wakeUpCheck();
+            handler.postDelayed(tickAlarmBuffer, ALARMBUFFERTICKTIMER);
         }
     };
 
@@ -339,6 +361,55 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         myFirebaseEEGRef.child("theta").child(currentTime).setValue(thetaCollection);
     }
 
+    private void wakeUpCheck() {
+        try {
+            String nextAlarmString = Settings.System.getString(getContentResolver(), Settings.System.NEXT_ALARM_FORMATTED);
+            Calendar gc = new GregorianCalendar();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE hh:mm a");
+
+            Date nextAlarm = simpleDateFormat.parse(nextAlarmString);
+
+            int nextAlarmHour = nextAlarm.getHours();
+            int nextAlarmMinute = nextAlarm.getMinutes();
+            if((nextAlarmHour < gc.get(Calendar.HOUR_OF_DAY)) || (nextAlarmHour == gc.get(Calendar.HOUR_OF_DAY) && nextAlarmMinute < gc.get(Calendar.MINUTE))) {
+                gc.add(Calendar.DATE, 1);
+            }
+            gc.set(Calendar.HOUR_OF_DAY, nextAlarm.getHours());
+            gc.set(Calendar.MINUTE, nextAlarm.getMinutes());
+            gc.set(Calendar.SECOND, 0);
+            nextAlarm = gc.getTime();
+            gc.add(Calendar.MINUTE, -timeBuffer);
+
+            Date earliestWakeUp = gc.getTime();
+            Date currentTime = new Date();
+
+            if (currentTime.after(earliestWakeUp) && currentTime.before(nextAlarm) && isFirstTime == true) {
+                if(true) {//TODO: Tilføj if-statement som tjekker for om nuværende søvn stadium er første
+                    isFirstTime = false;
+
+                    Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
+
+                    switch (alarmSound) {
+                        case "Quiet":
+                            break;
+                        case "Increasing":
+                            // Volumesteps / timeBuffer = increase 1 step / time
+                            break;
+                        case "Default":
+
+                            break;
+                    }
+
+                    intent.putExtra(AlarmClock.EXTRA_HOUR, currentTime.getHours());
+                    intent.putExtra(AlarmClock.EXTRA_MINUTES, currentTime.getMinutes()+1);
+                    startActivity(intent);
+                }
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
     private double setAverageAlphaBuffer() {
         double sum = 0;
         if(alphaBuffer.length > 0) {
@@ -402,6 +473,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 stopWatchObject.pause();
                 muse.unregisterAllListeners();
                 handler.removeCallbacks(tickUi);
+                handler.removeCallbacks(tickAlarmBuffer);
 
                 String endTime = standardDateFormat.format(new Date());
                 myFirebaseTimeRef.child("endTime").setValue(endTime);
@@ -410,11 +482,13 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 stopWatchObject.resume();
                 registerMuseListeners();
                 handler.post(tickUi);
+                handler.post(tickAlarmBuffer);
             }
         }else if(v.getId() == R.id.sessionStopButton) {
             stopWatchObject.stop();
             muse.unregisterAllListeners();
             handler.removeCallbacks(tickUi);
+            handler.removeCallbacks(tickAlarmBuffer);
 
             String endTime = standardDateFormat.format(new Date());
             myFirebaseTimeRef.child("endTime").setValue(endTime);

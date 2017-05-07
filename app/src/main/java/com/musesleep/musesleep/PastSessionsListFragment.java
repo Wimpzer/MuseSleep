@@ -16,9 +16,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.musesleep.musesleep.Adapter.RecyclerViewAdapter;
-import com.musesleep.musesleep.Object.FirebaseTimeObject;
-import com.musesleep.musesleep.Object.PastSessionObject;
+import com.musesleep.musesleep.adapter.RecyclerViewAdapter;
+import com.musesleep.musesleep.object.FirebaseTimeObject;
+import com.musesleep.musesleep.object.PastSessionObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

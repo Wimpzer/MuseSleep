@@ -19,6 +19,9 @@ public class MainFragment extends Fragment implements View.OnClickListener {
 
     private View rootView;
 
+    private TextView timeBufferTextView;
+    private TextView alarmSoundTextView;
+
     public MainFragment() {
     }
 
@@ -26,6 +29,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.content_main, container, false);
+
         // Initiating clickable views and sets OnClickListener
         Button startSessionButton = (Button) rootView.findViewById(R.id.startSessionButton);
         startSessionButton.setOnClickListener(this);
@@ -40,9 +44,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        // Initiating the text views here to avoid doing it two different places.
+        timeBufferTextView = (TextView) view.findViewById(R.id.timeBufferTextView);
+        alarmSoundTextView = (TextView) view.findViewById(R.id.alarmSoundTextView);
+    }
+
+    @Override
     public void onClick(View v) {
         if (v.getId() == R.id.startSessionButton) {
             Intent startSessionIntent = new Intent(getActivity(), TurnOnHeadbandActivity.class);
+            startSessionIntent.putExtra("timeBuffer", Integer.parseInt(timeBufferTextView.getText().toString().substring(0,2)));
+            startSessionIntent.putExtra("alarmSound", alarmSoundTextView.getText());
             startActivity(startSessionIntent);
         } else if (v.getId() == R.id.timeBufferImageView) {
             Intent timeBufferIntent = new Intent(getActivity(), ListViewActivity.class);
@@ -64,10 +77,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         if (resultCode == RESULT_OK) {
             String result = data.getStringExtra("selectedValue");
             if (requestCode == TIME_BUFFER_RESULT_CODE) {
-                TextView timeBufferTextView = (TextView) rootView.findViewById(R.id.timeBufferTextView);
                 timeBufferTextView.setText(result + " min");
             } else if (requestCode == ALARM_SOUND_RESULT_CODE) {
-                TextView alarmSoundTextView = (TextView) rootView.findViewById(R.id.alarmSoundTextView);
                 alarmSoundTextView.setText(result);
             }
         }
