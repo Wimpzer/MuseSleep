@@ -91,7 +91,10 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
                     int stageTime = Integer.parseInt(child.getKey());
                     int valueInSeconds = child.getValue(Integer.class);
                     long minutesOfValue = (long) valueInSeconds/60;
-                    int secondsOfValue = valueInSeconds % 60;
+                    String secondsOfValue = Integer.toString(valueInSeconds % 60);
+                    if(secondsOfValue.length() == 1) {
+                        secondsOfValue = "0" + secondsOfValue;
+                    }
                     String value = minutesOfValue + ":" + secondsOfValue;
                     if(stageTime == 1) {
                         stageOneTextView.setText(value);
