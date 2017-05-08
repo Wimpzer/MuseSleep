@@ -19,7 +19,7 @@
         <ImageView
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/ic_menu_camera"/>
+            />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -35,7 +35,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:textColor="@color/textColor"
-                android:text="Do a session that's at least 7 minutes long"/>
+                android:text="Get night sleep rated good lasting at least 7 hours" />
         </LinearLayout>
     </LinearLayout>
 
@@ -95,9 +95,9 @@
                         <ImageView
                             android:id="@+id/timeBufferImageView"
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="20dp"
                             android:layout_weight="1"
-                            android:background="@drawable/ic_menu_slideshow"
+                            android:background="@drawable/down_arrow"
                             android:layout_gravity="right"
                             android:clickable="true"
                             android:layout_marginEnd="5dp"/>
@@ -127,9 +127,9 @@
                         <ImageView
                             android:id="@+id/alarmSoundImageView"
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="20dp"
                             android:layout_weight="1"
-                            android:background="@drawable/ic_menu_slideshow"
+                            android:background="@drawable/down_arrow"
                             android:layout_gravity="right"
                             android:clickable="true"
                             android:layout_marginEnd="5dp"/>
