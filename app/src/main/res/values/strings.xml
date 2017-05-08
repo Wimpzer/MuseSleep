@@ -8,8 +8,11 @@
     <string name="time_buffer_headline">Select the buffer in minutes:</string>
     <string name="alarm_sound_headline">Select the sound behavior of the alarm:</string>
 
+    <string name="log_tag">MUSESLEEP</string>
     <string name="firebase_wave_tag">EEGs</string>
-    <string name="firebase_starttime_tag">StartTime</string>
+    <string name="firebase_time_tag">Time</string>
+    <string name="firebase_sleep_stage_tag">Stage</string>
+    <string name="firebase_stage_time_tag">TimeInStage</string>
 
     <string-array name="time_buffer_array">
         <item>5</item>

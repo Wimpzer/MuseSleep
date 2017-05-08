@@ -42,11 +42,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SessionActivity extends AppCompatActivity implements OnClickListener {
-    private final String TAG = "MUSESLEEP";
-    private final String FIREBASE_WAVE_TAG = "EEGs";
-    private final String FIREBASE_TIME_TAG = "Time";
-    private final String FIREBASE_SLEEP_STAGE_TAG = "Stage";
-    private final String FIREBASE_STAGE_TIME_TAG = "TimeInStage";
+    private String LOG_TAG;
+    private String FIREBASE_WAVE_TAG;
+    private String FIREBASE_TIME_TAG;
+    private String FIREBASE_SLEEP_STAGE_TAG;
+    private String FIREBASE_STAGE_TIME_TAG;
     private final int EEGTICKTIMER = 1000/2;
     private final int ALARMBUFFERTICKTIMER = 1000*60;
     private final int SLEEPSTAGETICKTIMER = 1000*5;
@@ -91,6 +91,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.session_activity);
+
+        setTags();
 
         // Gets extras
         Intent intent = getIntent();
@@ -148,6 +150,14 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         handler.post(tickEEG);
         handler.post(tickAlarmBuffer);
         handler.post(tickSleepStage);
+    }
+
+    private void setTags() {
+        LOG_TAG = getResources().getString(R.string.log_tag);
+        FIREBASE_WAVE_TAG = getResources().getString(R.string.firebase_wave_tag);
+        FIREBASE_TIME_TAG = getResources().getString(R.string.firebase_time_tag);
+        FIREBASE_SLEEP_STAGE_TAG = getResources().getString(R.string.firebase_sleep_stage_tag);
+        FIREBASE_STAGE_TIME_TAG = getResources().getString(R.string.firebase_stage_time_tag);
     }
 
     private void registerMuseListeners() {
@@ -218,7 +228,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         final String status = p.getPreviousConnectionState().toString().
                 concat(" -> ").
                 concat(current.toString());
-        Log.i(TAG, status);
+        Log.i(LOG_TAG, status);
         if (p.getCurrentConnectionState() == ConnectionState.DISCONNECTED) {
             handler.postDelayed(new Runnable() {
                 @Override
@@ -320,7 +330,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         double alphaWave = setAverageAlphaBuffer();
         if(Double.isNaN(alphaWave))
             alphaWave = 0;
-        Log.d(TAG, "updateAlpha - alphaWave: " + alphaWave);
+        Log.d(LOG_TAG, "updateAlpha - alphaWave: " + alphaWave);
         Map<String, Double> alphaCollection = new HashMap<>();
         for(int i = 0; i < alphaBuffer.length; i++) {
             if(Double.isNaN(alphaBuffer[i]))
@@ -333,7 +343,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         double betaWave = setAverageBetaBuffer();
         if(Double.isNaN(betaWave))
             betaWave = 0;
-        Log.d(TAG, "updateBeta - betaWave: " + betaWave);
+        Log.d(LOG_TAG, "updateBeta - betaWave: " + betaWave);
         Map<String, Double> betaCollection = new HashMap<>();
         for(int i = 0; i < betaBuffer.length; i++) {
             if(Double.isNaN(betaBuffer[i]))
@@ -346,7 +356,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         double deltaWave = setAverageDeltaBuffer();
         if(Double.isNaN(deltaWave))
             deltaWave = 0;
-        Log.d(TAG, "updateDelta - deltaWave: " + deltaWave);
+        Log.d(LOG_TAG, "updateDelta - deltaWave: " + deltaWave);
         Map<String, Double> deltaCollection = new HashMap<>();
         for(int i = 0; i < deltaBuffer.length; i++) {
             if(Double.isNaN(deltaBuffer[i]))
@@ -359,7 +369,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         double gammaWave = setAverageGammaBuffer();
         if(Double.isNaN(gammaWave))
             gammaWave = 0;
-        Log.d(TAG, "updateGamma - gammaWave: " + gammaWave);
+        Log.d(LOG_TAG, "updateGamma - gammaWave: " + gammaWave);
         Map<String, Double> gammaCollection = new HashMap<>();
         for(int i = 0; i < gammaBuffer.length; i++) {
             if(Double.isNaN(gammaBuffer[i]))
@@ -372,7 +382,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         double thetaWave = setAverageThetaBuffer();
         if(Double.isNaN(thetaWave))
             thetaWave = 0;
-        Log.d(TAG, "updateTheta - thetaWave: " + thetaWave);
+        Log.d(LOG_TAG, "updateTheta - thetaWave: " + thetaWave);
         Map<String, Double> thetaCollection = new HashMap<>();
         for(int i = 0; i < thetaBuffer.length; i++) {
             if(Double.isNaN(thetaBuffer[i]))

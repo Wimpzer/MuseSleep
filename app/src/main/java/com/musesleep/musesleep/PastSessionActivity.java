@@ -17,8 +17,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.musesleep.musesleep.object.FirebaseTimeObject;
 
 public class PastSessionActivity extends AppCompatActivity implements View.OnClickListener {
-    private final String FIREBASE_TIME_TAG = "Time";
-    private final String FIREBASE_STAGE_TIME_TAG = "TimeInStage";
+    private String FIREBASE_TIME_TAG;
+    private String FIREBASE_STAGE_TIME_TAG;
 
     private FirebaseDatabase myFirebaseInstance;
     private DatabaseReference myFirebaseTimeRef;
@@ -29,6 +29,8 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.past_session_activity);
+
+        setTags();
 
         // Get the values from intent
         Intent intent = getIntent();
@@ -124,6 +126,11 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
             }
         });
         backButton.setOnClickListener(this);
+    }
+
+    private void setTags() {
+        FIREBASE_TIME_TAG = getResources().getString(R.string.firebase_time_tag);
+        FIREBASE_STAGE_TIME_TAG = getResources().getString(R.string.firebase_stage_time_tag);
     }
 
     @Override
