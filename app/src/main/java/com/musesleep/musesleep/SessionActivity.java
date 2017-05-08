@@ -23,8 +23,11 @@ import com.choosemuse.libmuse.MuseDataPacket;
 import com.choosemuse.libmuse.MuseDataPacketType;
 import com.choosemuse.libmuse.MuseFileWriter;
 import com.choosemuse.libmuse.MuseVersion;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.musesleep.musesleep.adapter.MuseAdapter;
 import com.musesleep.musesleep.object.StopWatchObject;
 
@@ -42,8 +45,11 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private final String TAG = "MUSESLEEP";
     private final String FIREBASE_WAVE_TAG = "EEGs";
     private final String FIREBASE_TIME_TAG = "Time";
-    private final int UITICKTIMER = 1000/2;
+    private final String FIREBASE_SLEEP_STAGE_TAG = "Stage";
+    private final String FIREBASE_STAGE_TIME_TAG = "TimeInStage";
+    private final int EEGTICKTIMER = 1000/2;
     private final int ALARMBUFFERTICKTIMER = 1000*60;
+    private final int SLEEPSTAGETICKTIMER = 1000*5;
     private final SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
 
     private Muse muse = null;
@@ -69,12 +75,15 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private DatabaseReference myFirebaseBaseRef;
     private DatabaseReference myFirebaseEEGRef;
     private DatabaseReference myFirebaseTimeRef;
+    private DatabaseReference myFirebaseSleepStageRef;
+    private DatabaseReference myFirebaseStageTimeRef;
     private String firebaseSessionId;
 
     private StopWatchObject stopWatchObject;
     private Button pauseButton;
 
     private int timeBuffer;
+    private int sleepStage = 1;
     private String alarmSound;
     private boolean isFirstTime = true;
 
@@ -103,6 +112,8 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         // .setPersistenceEnabled(true) needs to added for offline use
         myFirebaseEEGRef = myFirebaseInstance.getReference(FIREBASE_WAVE_TAG).child(firebaseSessionId);
         myFirebaseTimeRef = myFirebaseInstance.getReference(FIREBASE_TIME_TAG).child(firebaseSessionId);
+        myFirebaseSleepStageRef = myFirebaseInstance.getReference(FIREBASE_SLEEP_STAGE_TAG).child(firebaseSessionId);
+        myFirebaseStageTimeRef = myFirebaseInstance.getReference(FIREBASE_STAGE_TIME_TAG).child(firebaseSessionId);
 
         // Sets the start time and start day for the current session
         Date date = new Date();
@@ -131,6 +142,12 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         stopButton.setOnClickListener(this);
         pauseButton = (Button) findViewById(R.id.sessionPauseButton);
         pauseButton.setOnClickListener(this);
+
+        muse.unregisterAllListeners();
+        registerMuseListeners();
+        handler.post(tickEEG);
+        handler.post(tickAlarmBuffer);
+        handler.post(tickSleepStage);
     }
 
     private void registerMuseListeners() {
@@ -154,10 +171,6 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     @Override
     protected void onResume() {
         super.onResume();
-        muse.unregisterAllListeners();
-        registerMuseListeners();
-        handler.post(tickUi);
-        handler.post(tickAlarmBuffer);
     }
 
     @Override
@@ -166,8 +179,9 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         setEndTime();
         muse.unregisterAllListeners();
         muse.disconnect(false);
-        handler.removeCallbacks(tickUi);
+        handler.removeCallbacks(tickEEG);
         handler.removeCallbacks(tickAlarmBuffer);
+        handler.removeCallbacks(tickSleepStage);
     }
 
     @Override
@@ -278,11 +292,11 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
     }
 
-    private final Runnable tickUi = new Runnable() {
+    private final Runnable tickEEG = new Runnable() {
         @Override
         public void run() {
             updateEeg();
-            handler.postDelayed(tickUi, UITICKTIMER);
+            handler.postDelayed(tickEEG, EEGTICKTIMER);
         }
     };
 
@@ -291,6 +305,14 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         public void run() {
             wakeUpCheck();
             handler.postDelayed(tickAlarmBuffer, ALARMBUFFERTICKTIMER);
+        }
+    };
+
+    private final Runnable tickSleepStage = new Runnable() {
+        @Override
+        public void run() {
+            saveSleepStage();
+            handler.postDelayed(tickSleepStage, SLEEPSTAGETICKTIMER);
         }
     };
 
@@ -360,6 +382,9 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         }
         thetaCollection.put("thetaAvg", thetaWave);
 
+        //This would be where the 'algorithm' would calculate the sleepStage
+        sleepStage = 1;
+
         String currentTime = standardDateFormat.format(new Date());
         myFirebaseEEGRef.child("alpha").child(currentTime).setValue(alphaCollection);
         myFirebaseEEGRef.child("beta").child(currentTime).setValue(betaCollection);
@@ -391,7 +416,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
             Date currentTime = new Date();
 
             if (currentTime.after(earliestWakeUp) && currentTime.before(nextAlarm) && isFirstTime == true) {
-                if(true) {//TODO: Tilføj if-statement som tjekker for om nuværende søvn stadium er første
+                if(sleepStage == 1) {
                     isFirstTime = false;
 
                     Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
@@ -423,6 +448,34 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         } catch (ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    private void saveSleepStage() {
+        String currentTime = standardDateFormat.format(new Date());
+        myFirebaseSleepStageRef.child(currentTime).setValue(sleepStage);
+
+        myFirebaseStageTimeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.getValue() == null) { // Setting the value to 0 seconds for all four stages
+                    dataSnapshot.getRef().child("1").setValue(0);
+                    dataSnapshot.getRef().child("2").setValue(0);
+                    dataSnapshot.getRef().child("3").setValue(0);
+                    dataSnapshot.getRef().child("4").setValue(0);
+                }else{
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        int stageTime = Integer.parseInt(child.getKey());
+                        if (stageTime == sleepStage)
+                            dataSnapshot.getRef().child(child.getKey()).setValue(child.getValue(Integer.class) + 5);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("saveSleepStage", "onCancelled", databaseError.toException());
+            }
+        });
     }
 
     private double setAverageAlphaBuffer() {
@@ -487,23 +540,26 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 pauseButton.setText("Resume");
                 stopWatchObject.pause();
                 muse.unregisterAllListeners();
-                handler.removeCallbacks(tickUi);
+                handler.removeCallbacks(tickEEG);
                 handler.removeCallbacks(tickAlarmBuffer);
+                handler.removeCallbacks(tickSleepStage);
 
                 setEndTime();
             }else{
                 pauseButton.setText("Pause");
                 stopWatchObject.resume();
                 registerMuseListeners();
-                handler.post(tickUi);
+                handler.post(tickEEG);
                 handler.post(tickAlarmBuffer);
+                handler.post(tickSleepStage);
             }
         }else if(v.getId() == R.id.sessionStopButton) {
             stopWatchObject.stop();
             muse.unregisterAllListeners();
             muse.disconnect(false);
-            handler.removeCallbacks(tickUi);
+            handler.removeCallbacks(tickEEG);
             handler.removeCallbacks(tickAlarmBuffer);
+            handler.removeCallbacks(tickSleepStage);
 
             setEndTime();
 
