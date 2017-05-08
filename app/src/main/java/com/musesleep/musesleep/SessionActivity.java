@@ -97,7 +97,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
         myFirebaseBaseRef = myFirebaseInstance.getReference();
-        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
+//        myFirebaseBaseRef.removeValue(); // Deletes the entire Firebase database
         firebaseSessionId = myFirebaseBaseRef.push().getKey();
 
         // .setPersistenceEnabled(true) needs to added for offline use
@@ -398,6 +398,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
                     switch (alarmSound) {
                         case "Quiet":
+                            // Extra_RINGTONE
                             break;
                         case "Increasing":
                             // Volumesteps / timeBuffer = increase 1 step / time
@@ -406,6 +407,13 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
                             break;
                     }
+
+                    handler.postDelayed(new Runnable() { //TODO: Hvorfor venter den ikke på delayed time?
+                        @Override
+                        public void run() {
+                            startPastSessionActivity();
+                        }
+                    }, 60-currentTime.getSeconds());
 
                     intent.putExtra(AlarmClock.EXTRA_HOUR, currentTime.getHours());
                     intent.putExtra(AlarmClock.EXTRA_MINUTES, currentTime.getMinutes()+1);
@@ -499,11 +507,15 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
             setEndTime();
 
-            Intent pastSessionIntent = new Intent(this, PastSessionActivity.class);
-            pastSessionIntent.putExtra("sessionId", firebaseSessionId);
-            startActivity(pastSessionIntent);
-            finish();
+            startPastSessionActivity();
         }
+    }
+
+    private void startPastSessionActivity() {
+        Intent pastSessionIntent = new Intent(this, PastSessionActivity.class);
+        pastSessionIntent.putExtra("sessionId", firebaseSessionId);
+        startActivity(pastSessionIntent);
+        finish();
     }
 
     private void setEndTime() {
