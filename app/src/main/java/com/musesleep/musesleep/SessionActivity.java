@@ -473,7 +473,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e("saveSleepStage", "onCancelled", databaseError.toException());
+                Log.e("SessionActivity", "onCancelled", databaseError.toException());
             }
         });
     }
