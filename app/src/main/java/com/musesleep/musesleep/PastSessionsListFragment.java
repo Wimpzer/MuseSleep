@@ -120,6 +120,7 @@ public class PastSessionsListFragment extends Fragment {
                         String sessionId = sessionIds.get(position);
                         Intent pastSessionIntent = new Intent(getActivity(), PastSessionActivity.class);
                         pastSessionIntent.putExtra("sessionId", sessionId);
+                        pastSessionIntent.putExtra("isCrashed", false);
                         startActivity(pastSessionIntent);
                     }
                 });

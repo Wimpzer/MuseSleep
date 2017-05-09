@@ -22,6 +22,8 @@ import com.choosemuse.libmuse.MuseDataListener;
 import com.choosemuse.libmuse.MuseDataPacket;
 import com.choosemuse.libmuse.MuseDataPacketType;
 import com.choosemuse.libmuse.MuseFileWriter;
+import com.choosemuse.libmuse.MuseListener;
+import com.choosemuse.libmuse.MuseManagerAndroid;
 import com.choosemuse.libmuse.MuseVersion;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,6 +40,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -53,6 +56,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private final SimpleDateFormat standardDateFormat =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SS");
 
     private Muse muse = null;
+    private MuseManagerAndroid manager = null;
     private ConnectionListener connectionListener = null;
     private DataListener dataListener = null;
 
@@ -104,6 +108,21 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                 new WeakReference<>(this);
         connectionListener = new ConnectionListener(weakActivity);
         dataListener = new DataListener(weakActivity);
+
+        // Sets the muse manager to listen for changes in muses. //TODO: Make it work
+        manager = MuseAdapter.getInstance().getManager();
+        MuseListener museListener = new MuseListener() {
+            @Override
+            public void museListChanged() {
+                List<Muse> pairedMuses = manager.getMuses();
+                if (pairedMuses.size() == 0) {
+                    startPastSessionActivity(true);
+                }
+            }
+        };
+        manager.setMuseListener(museListener);
+        manager.stopListening();
+        manager.startListening();
 
         // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
@@ -189,6 +208,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
         setEndTime();
         muse.unregisterAllListeners();
         muse.disconnect(false);
+        manager.stopListening();
         handler.removeCallbacks(tickEEG);
         handler.removeCallbacks(tickAlarmBuffer);
         handler.removeCallbacks(tickSleepStage);
@@ -446,7 +466,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
                     handler.postDelayed(new Runnable() { //TODO: Hvorfor venter den ikke på delayed time?
                         @Override
                         public void run() {
-                            startPastSessionActivity();
+                            startPastSessionActivity(false);
                         }
                     }, 60-currentTime.getSeconds());
 
@@ -573,13 +593,14 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
 
             setEndTime();
 
-            startPastSessionActivity();
+            startPastSessionActivity(false);
         }
     }
 
-    private void startPastSessionActivity() {
+    private void startPastSessionActivity(boolean isCrashed) {
         Intent pastSessionIntent = new Intent(this, PastSessionActivity.class);
         pastSessionIntent.putExtra("sessionId", firebaseSessionId);
+        pastSessionIntent.putExtra("isCrashed", true);
         startActivity(pastSessionIntent);
         finish();
     }

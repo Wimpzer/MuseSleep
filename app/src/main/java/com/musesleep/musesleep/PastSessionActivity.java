@@ -1,7 +1,9 @@
 package com.musesleep.musesleep;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +37,7 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
         // Get the values from intent
         Intent intent = getIntent();
         firebaseSessionId = intent.getExtras().getString("sessionId");
+        boolean isCrashed = intent.getExtras().getBoolean("isCrashed");
 
         // Sets the Firebase references to the current sessionId
         myFirebaseInstance = FirebaseDatabase.getInstance();
@@ -112,10 +115,12 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
                 }
 
                 int totalTime = secondsInStageOne + secondsInStageTwo + secondsInStageThree + secondsInStageFour;
-                stageOneProportion = secondsInStageOne/totalTime;
-                stageTwoProportion = secondsInStageTwo/totalTime;
-                stageThreeProportion = secondsInStageThree/totalTime;
-                stageFourProportion = secondsInStageFour/totalTime;
+                if(totalTime != 0) {
+                    stageOneProportion = secondsInStageOne / totalTime;
+                    stageTwoProportion = secondsInStageTwo / totalTime;
+                    stageThreeProportion = secondsInStageThree / totalTime;
+                    stageFourProportion = secondsInStageFour / totalTime;
+                }
 
                 String sleepQuality = "";
                 // TODO: Rate sleep quality baseret på tid i sleep stages
@@ -129,6 +134,18 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
             }
         });
         backButton.setOnClickListener(this);
+
+        if(isCrashed) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Lost the connection to the muse and therefore ended the session");
+            builder.setNeutralButton("Okay", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.create().show();
+        }
     }
 
     private void setTags() {
