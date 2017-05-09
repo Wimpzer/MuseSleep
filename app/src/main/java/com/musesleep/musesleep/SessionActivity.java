@@ -600,7 +600,7 @@ public class SessionActivity extends AppCompatActivity implements OnClickListene
     private void startPastSessionActivity(boolean isCrashed) {
         Intent pastSessionIntent = new Intent(this, PastSessionActivity.class);
         pastSessionIntent.putExtra("sessionId", firebaseSessionId);
-        pastSessionIntent.putExtra("isCrashed", true);
+        pastSessionIntent.putExtra("isCrashed", isCrashed);
         startActivity(pastSessionIntent);
         finish();
     }

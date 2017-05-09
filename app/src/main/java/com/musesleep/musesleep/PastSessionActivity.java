@@ -93,12 +93,13 @@ public class PastSessionActivity extends AppCompatActivity implements View.OnCli
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     int stageTime = Integer.parseInt(child.getKey());
                     int valueInSeconds = child.getValue(Integer.class);
-                    long minutesOfValue = (long) valueInSeconds/60;
+                    long hoursOfValue = (long) (valueInSeconds/60)/60;
+                    long minutesOfValue = (long) (valueInSeconds-(hoursOfValue*60*60))/60;
                     String secondsOfValue = Integer.toString(valueInSeconds % 60);
                     if(secondsOfValue.length() == 1) {
                         secondsOfValue = "0" + secondsOfValue;
                     }
-                    String value = minutesOfValue + ":" + secondsOfValue;
+                    String value = hoursOfValue + ":" + minutesOfValue + ":" + secondsOfValue;
                     if(stageTime == 1) {
                         stageOneTextView.setText(value);
                         secondsInStageOne = valueInSeconds;
