@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import static android.app.Activity.RESULT_OK;
@@ -34,11 +35,11 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         Button startSessionButton = (Button) rootView.findViewById(R.id.startSessionButton);
         startSessionButton.setOnClickListener(this);
 
-        ImageView timeBufferImageView = (ImageView) rootView.findViewById(R.id.timeBufferImageView);
-        timeBufferImageView.setOnClickListener(this);
+        LinearLayout timeBufferLinearLayout = (LinearLayout) rootView.findViewById(R.id.timeBufferLinearLayout);
+        timeBufferLinearLayout.setOnClickListener(this);
 
-        ImageView alarmSoundImageView = (ImageView) rootView.findViewById(R.id.alarmSoundImageView);
-        alarmSoundImageView.setOnClickListener(this);
+        LinearLayout alarmSoundLinearLayout = (LinearLayout) rootView.findViewById(R.id.alarmSoundLinearLayout);
+        alarmSoundLinearLayout.setOnClickListener(this);
 
         return rootView;
     }
@@ -52,17 +53,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.startSessionButton) {
+        int id = v.getId();
+        if (id == R.id.startSessionButton) {
             Intent startSessionIntent = new Intent(getActivity(), TurnOnHeadbandActivity.class);
             startSessionIntent.putExtra("timeBuffer", Integer.parseInt(timeBufferTextView.getText().toString().substring(0,2)));
             startSessionIntent.putExtra("alarmSound", alarmSoundTextView.getText());
             startActivity(startSessionIntent);
-        } else if (v.getId() == R.id.timeBufferImageView) {
+        } else if (id == R.id.timeBufferLinearLayout) {
             Intent timeBufferIntent = new Intent(getActivity(), ListViewActivity.class);
             timeBufferIntent.putExtra("headline", getString(R.string.time_buffer_headline));
             timeBufferIntent.putExtra("array", R.array.time_buffer_array);
             startActivityForResult(timeBufferIntent, TIME_BUFFER_RESULT_CODE);
-        } else if (v.getId() == R.id.alarmSoundImageView) {
+        } else if (id == R.id.alarmSoundLinearLayout) {
             Intent timeBufferIntent = new Intent(getActivity(), ListViewActivity.class);
             timeBufferIntent.putExtra("headline", getString(R.string.alarm_sound_headline));
             timeBufferIntent.putExtra("array", R.array.alarm_sound_array);

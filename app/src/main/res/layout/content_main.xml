@@ -72,10 +72,12 @@
                 android:orientation="horizontal"
                 android:layout_margin="10dp">
                 <LinearLayout
+                    android:id="@+id/timeBufferLinearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:clickable="true">
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -99,15 +101,16 @@
                             android:layout_weight="1"
                             android:background="@drawable/down_arrow"
                             android:layout_gravity="right"
-                            android:clickable="true"
                             android:layout_marginEnd="5dp"/>
                     </LinearLayout>
                 </LinearLayout>
                 <LinearLayout
+                    android:id="@+id/alarmSoundLinearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:clickable="true">
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -131,7 +134,6 @@
                             android:layout_weight="1"
                             android:background="@drawable/down_arrow"
                             android:layout_gravity="right"
-                            android:clickable="true"
                             android:layout_marginEnd="5dp"/>
                     </LinearLayout>
                 </LinearLayout>

@@ -15,7 +15,7 @@
     <string name="firebase_stage_time_tag">TimeInStage</string>
 
     <string-array name="time_buffer_array">
-        <item>5</item>
+        <item>05</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>
